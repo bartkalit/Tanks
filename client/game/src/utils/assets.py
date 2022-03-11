@@ -8,31 +8,30 @@ class Assets:
     width = 0
     height = 0
 
-    @staticmethod
-    def setScreen(screen):
-        Assets.screen = screen
+    def __init__(self, screen, map):
+        self.screen = screen
+        self.map = map
+        self.load_assets()
 
-    @staticmethod
-    def load_assets(map_width, map_height):
+    def load_assets(self):
         assets = Blocks.getAll()
-        Assets.width = Assets.screen.get_size()[0] / map_width
-        Assets.height = Assets.screen.get_size()[1] / map_height
+
+        (w, h) = self.screen.get_size()
+        self.width = w / self.map.width
+        self.height = h / self.map.height
         for asset in assets:
-            Assets.all[asset] = pygame.image.load('assets/textures/' + asset + '.jpg')
-            Assets.all[asset] = pygame.transform.scale(Assets.all[asset], (Assets.width, Assets.height))
+            self.all[asset] = pygame.image.load('assets/textures/' + asset + '.png')
+            self.all[asset] = pygame.transform.scale(self.all[asset], (self.width, self.height))
 
-    @staticmethod
-    def setWall(position):
-        return Assets.screen.blit(Assets.all[Blocks.wall], position)
+    def set_wall(self, position):
+        return self.screen.blit(self.all[Blocks.wall], position)
 
-    @staticmethod
-    def setGround(position):
-        return Assets.screen.blit(Assets.all[Blocks.ground], position)
+    def set_ground(self, position):
+        return self.screen.blit(self.all[Blocks.ground], position)
 
-    @staticmethod
-    def setBlock(char, position):
+    def set_block(self, char, position):
         block = Blocks.getBlock(char)
         if block == Blocks.wall:
-            return Assets.setWall(position)
+            return self.set_wall(position)
         if block == Blocks.ground:
-            return Assets.setGround(position)
+            return self.set_ground(position)

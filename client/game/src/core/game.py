@@ -6,9 +6,9 @@ from client.game.src.utils.assets import Assets
 
 class Game:
 
-    def __init__(self):
+    def __init__(self, screen):
         self.map = self._load_map('kyiv')
-        Assets.load_assets(self.map.width, self.map.height)
+        self.assets = Assets(screen, self.map)
         pass
 
     def show_map(self):
@@ -16,11 +16,9 @@ class Game:
         for row in self.map.data:
             x = 0
             for block in row:
-                Assets.setBlock(block, (x, y))
-                x += Assets.width
-            y += Assets.height
-
-        pygame.display.update()
+                self.assets.set_block(block, (x, y))
+                x += self.assets.width
+            y += self.assets.height
 
     def _load_map(self, map_name: str) -> Map:
         try:
