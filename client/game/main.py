@@ -1,18 +1,3 @@
-import pygame
-
-from client.game.src.utils.blocks import Blocks
-
-
-
-
-
-
-
-
-
-
-
-
-
+from client.game.src.core.screen import Screen
 
 screen = Screen()

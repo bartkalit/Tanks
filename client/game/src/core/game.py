@@ -2,7 +2,6 @@ import pygame
 
 from client.game.src.core.map import Map
 from client.game.src.utils.assets import Assets
-from client.game.src.utils.blocks import Blocks
 
 
 class Game:
@@ -17,7 +16,7 @@ class Game:
         for row in self.map.data:
             x = 0
             for block in row:
-                Blocks.setBlock(block, (x, y))
+                Assets.setBlock(block, (x, y))
                 x += Assets.width
             y += Assets.height
 

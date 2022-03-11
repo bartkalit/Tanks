@@ -1,6 +1,7 @@
 import pygame
 
 from client.game.src.core.game import Game
+from client.game.src.utils.assets import Assets
 
 
 class Screen(object):
@@ -17,6 +18,7 @@ class Screen(object):
     def _set_window(self):
         self.screen = pygame.display.set_mode(self.resolution)
         pygame.display.set_caption('FurryTanks')
+        Assets.setScreen(self.screen)
 
     def loop(self):
         running = True
