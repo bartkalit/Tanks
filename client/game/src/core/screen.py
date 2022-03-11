@@ -19,8 +19,7 @@ class Screen(object):
         self.screen = pygame.display.set_mode(self.resolution)
         Assets.setScreen(self.screen)
         pygame.display.set_caption('FurryTanks')
-        programIcon = pygame.image.load('assets/icons/logo.png')
-        pygame.display.set_icon(programIcon)
+        pygame.display.set_icon(pygame.image.load('assets/icons/logo.png'))
 
     def loop(self):
         running = True
