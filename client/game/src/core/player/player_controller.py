@@ -33,14 +33,15 @@ class PlayerController:
     def drive(self, drive: Drive):
         pos = self.player.position
         speed = Config.player['speed']['drive']
+        radians = self.player.angle * pi / 180
         if drive == Drive.FORWARD:
-            x = pos[0] + (speed * cos(self.player.angle * pi / 180))
-            y = pos[1] + (speed * sin(self.player.angle * pi / 180))
+            x = pos[0] + (speed * cos(radians))
+            y = pos[1] + (speed * sin(radians))
             new_position = (x, y)
             pass
         else:
-            x = pos[0] - (speed * cos(self.player.angle * pi / 180))
-            y = pos[1] - (speed * sin(self.player.angle * pi / 180))
+            x = pos[0] - (speed * cos(radians))
+            y = pos[1] - (speed * sin(radians))
             new_position = (x, y)
             pass
 
@@ -53,6 +54,11 @@ class PlayerController:
             new_angle = -rotate_speed
         else:
             new_angle = rotate_speed
+
+        if new_angle > 360:
+            new_angle -= 360
+        elif new_angle < -360:
+            new_angle += 360
 
         self.player.rotate(new_angle)
         # TODO: Send new angle to the server
