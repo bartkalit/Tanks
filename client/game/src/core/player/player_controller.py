@@ -1,5 +1,5 @@
 from enum import Enum
-
+from math import cos, sin, pi
 import pygame
 
 from client.game.src.utils.config import Config
@@ -32,21 +32,16 @@ class PlayerController:
 
     def drive(self, drive: Drive):
         pos = self.player.position
-        # TODO: Calculate new position
-        new_position = pos
+        speed = Config.player['speed']['drive']
         if drive == Drive.FORWARD:
-            # TODO: Calculate new position
-            x = pos[0]
-            y = pos[1]
-            speed = Config.player['speed']['drive']
-            new_position = (x + speed, y + speed)
+            x = pos[0] + (speed * cos(self.player.angle * pi / 180))
+            y = pos[1] + (speed * sin(self.player.angle * pi / 180))
+            new_position = (x, y)
             pass
         else:
-            # TODO: Calculate new position
-            x = pos[0]
-            y = pos[1]
-            speed = Config.player['speed']['drive']
-            new_position = (x - speed, y - speed)
+            x = pos[0] - (speed * cos(self.player.angle * pi / 180))
+            y = pos[1] - (speed * sin(self.player.angle * pi / 180))
+            new_position = (x, y)
             pass
 
         self.player.move(new_position)
@@ -55,9 +50,9 @@ class PlayerController:
     def rotate(self, angle: Rotate):
         rotate_speed = Config.player['speed']['rotate']
         if angle == Rotate.LEFT:
-            new_angle = rotate_speed
-        else:
             new_angle = -rotate_speed
+        else:
+            new_angle = rotate_speed
 
         self.player.rotate(new_angle)
         # TODO: Send new angle to the server

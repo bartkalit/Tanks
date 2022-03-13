@@ -28,8 +28,7 @@ class Player:
 
     def draw(self):
         self.game.show_map()
-        print(self.screen)
-        tank = pygame.transform.rotate(self.tank, self.angle)
+        tank = pygame.transform.rotate(self.tank, -self.angle)
         self.screen.blit(tank, self.position)
         pygame.display.update()
         pass
@@ -37,13 +36,13 @@ class Player:
     def move(self, position):
         self.position = position
         self.draw()
-        # TODO: Update tank position & emit information to the server
+        # TODO: Emit information to the server
         pass
 
     def rotate(self, angle):
         self.angle += angle
         self.draw()
-        # TODO: Redraw tank & emit information to the server
+        # TODO: Emit information to the server
         pass
 
     def shot(self):
