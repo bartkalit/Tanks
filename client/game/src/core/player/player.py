@@ -4,7 +4,7 @@ import pygame
 class Player:
     def __init__(self, screen, game, id: int, position=None):
         if position is None:
-            position = (0, 0)
+            position = (400, 400)
         self.screen = screen
         self.game = game
         self.map = game.map
@@ -28,8 +28,12 @@ class Player:
 
     def draw(self):
         self.game.show_map()
-        tank = pygame.transform.rotate(self.tank, -self.angle)
-        self.screen.blit(tank, self.position)
+
+        tank_copy = pygame.transform.rotate(self.tank, -self.angle)
+        x, y = self.position
+        new_position = [x - int(tank_copy.get_width() / 2), y - int(tank_copy.get_height() / 2)]
+        self.screen.blit(tank_copy, new_position)
+
         pygame.display.update()
         pass
 
