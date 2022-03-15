@@ -1,6 +1,7 @@
 import pygame
 
 from client.game.src.utils.blocks import Blocks
+from client.game.src.utils.sprite import Sprite
 
 
 class Assets:
@@ -24,14 +25,14 @@ class Assets:
             self.all[asset] = pygame.transform.scale(self.all[asset], (self.width, self.height))
 
     def set_wall(self, position):
-        return self.screen.blit(self.all[Blocks.wall], position)
+        self.map.add_wall(Sprite(position, self.all[Blocks.wall]))
 
     def set_ground(self, position):
-        return self.screen.blit(self.all[Blocks.ground], position)
+        self.map.add_ground(Sprite(position, self.all[Blocks.ground]))
 
     def set_block(self, char, position):
         block = Blocks.getBlock(char)
         if block == Blocks.wall:
-            return self.set_wall(position)
+            self.set_wall(position)
         if block == Blocks.ground:
-            return self.set_ground(position)
+            self.set_ground(position)
