@@ -31,7 +31,7 @@ class Screen(object):
         pygame.display.update()
 
     def new_game(self):
-        self.instance.game = Game(self.instance.screen)
+        self.instance.game = Game(self.instance.screen, 'kyiv')
         player = Player(self.instance.screen, self.instance.game, 1)
         self.instance.current_player = PlayerController(player)
         self.refresh_screen()
@@ -50,3 +50,4 @@ class Screen(object):
             time.sleep(delay)
             self.instance.prev_time = curr_time
 
+        pygame.quit()
