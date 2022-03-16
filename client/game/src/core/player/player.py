@@ -32,6 +32,7 @@ class Player:
         self.game.refresh_ground()
 
         self.screen.blit(self.tank.image, self.tank.rect)
+        pygame.draw.rect(self.screen, (255, 0 ,0), (self.tank.rect.x, self.tank.rect.y, self.tank.rect.width, self.tank.rect.height), 2)
         # tank_copy = pygame.transform.rotate(self.tank, -self.angle)
         # x, y = self.position
         # new_position = [x - int(tank_copy.get_width() / 2), y - int(tank_copy.get_height() / 2)]
@@ -44,18 +45,22 @@ class Player:
         return len(pygame.sprite.spritecollide(self.tank, self.map.walls, False)) == 0
 
     def move(self, position):
+        self.tank.move(position)
         if self._wall_collide():
             self.position = position
-            self.tank.move(position)
             self.draw()
+        else:
+            self.tank.move(self.position)
         # TODO: Emit information to the server
         pass
 
     def rotate(self, angle):
+        self.tank.rotate(self.angle + angle)
         if self._wall_collide():
             self.angle += angle
-            self.tank.rotate(self.angle)
             self.draw()
+        else:
+            self.tank.rotate(self.angle)
         # TODO: Emit information to the server
         pass
 

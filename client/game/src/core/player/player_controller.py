@@ -11,8 +11,8 @@ class Drive(Enum):
 
 
 class Rotate(Enum):
-    LEFT = 0
     RIGHT = 1
+    LEFT = 0
 
 
 class PlayerController:
@@ -33,17 +33,15 @@ class PlayerController:
     def drive(self, drive: Drive):
         pos = self.player.position
         speed = Config.player['speed']['drive']
-        radians = self.player.angle * pi / 180
+        radians = -self.player.angle * pi / 180
         if drive == Drive.FORWARD:
             x = pos[0] + (speed * cos(radians))
             y = pos[1] + (speed * sin(radians))
             new_position = (x, y)
-            pass
         else:
             x = pos[0] - (speed * cos(radians))
             y = pos[1] - (speed * sin(radians))
             new_position = (x, y)
-            pass
 
         self.player.move(new_position)
         # TODO: Send new position to the server
