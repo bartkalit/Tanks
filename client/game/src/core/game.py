@@ -7,11 +7,12 @@ from client.game.src.utils.assets import Assets
 class Game:
 
     def __init__(self, screen):
+        self.screen = screen
         self.map = self._load_map('kyiv')
         self.assets = Assets(screen, self.map)
         pass
 
-    def show_map(self):
+    def load_assets(self):
         x, y = 0, 0
         for row in self.map.data:
             x = 0
@@ -19,6 +20,16 @@ class Game:
                 self.assets.set_block(block, (x, y))
                 x += self.assets.width
             y += self.assets.height
+
+    def refresh_map(self):
+        self.refresh_ground()
+        self.refresh_walls()
+
+    def refresh_ground(self):
+        self.map.ground.draw(self.screen)
+
+    def refresh_walls(self):
+        self.map.walls.draw(self.screen)
 
     def _load_map(self, map_name: str) -> Map:
         try:

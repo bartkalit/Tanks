@@ -26,12 +26,14 @@ class Screen(object):
         pygame.display.set_caption('FurryTanks')
         pygame.display.set_icon(pygame.image.load('assets/icons/logo.png'))
 
-    def refresh_screen(self):
-        self.instance.game.show_map()
+    @staticmethod
+    def refresh_screen():
         pygame.display.update()
 
     def new_game(self):
         self.instance.game = Game(self.instance.screen)
+        self.instance.game.load_assets()
+        self.instance.game.refresh_map()
         player = Player(self.instance.screen, self.instance.game, 1)
         self.instance.current_player = PlayerController(player)
         self.refresh_screen()
