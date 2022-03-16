@@ -17,14 +17,15 @@ class Player:
         self.points = 0
         self.bullets = 5
         self.reload = 0
+        self._tank_scale = 0.7
         self.create_tank()
 
     def create_tank(self):
         tank = pygame.image.load('assets/textures/tank' + str(self.id) + '.png')
 
         (w, h) = self.screen.get_size()
-        width = w / self.map.width
-        height = h / self.map.height
+        width = w / self.map.width * self._tank_scale
+        height = h / self.map.height * self._tank_scale
 
         self.tank = TankSprite(self.position, pygame.transform.scale(tank, (width, height)))
 
