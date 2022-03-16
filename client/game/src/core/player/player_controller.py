@@ -49,9 +49,9 @@ class PlayerController:
     def rotate(self, angle: Rotate):
         rotate_speed = Config.player['speed']['rotate']
         if angle == Rotate.LEFT:
-            new_angle = -rotate_speed
-        else:
             new_angle = rotate_speed
+        else:
+            new_angle = -rotate_speed
 
         if new_angle > 360:
             new_angle -= 360
