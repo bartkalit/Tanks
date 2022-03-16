@@ -1,7 +1,7 @@
 class Config:
     player = {
         'speed': {
-            'drive': 100,
-            'rotate': 60
+            'drive': 120,
+            'rotate': 80
         }
     }

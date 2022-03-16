@@ -8,7 +8,7 @@ from client.game.src.core.player.player import Player
 
 class Screen(object):
     game = None
-    target_fps = 25
+    target_fps = 120
     prev_time = time.time()
 
     def __new__(cls):
@@ -39,16 +39,14 @@ class Screen(object):
         self.refresh_screen()
 
     def loop(self):
+        clock = pygame.time.Clock()
         running = True
         while running:
+            frame_time = clock.tick(self.instance.target_fps)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
 
-            curr_time = time.time()
-            diff = curr_time - self.instance.prev_time
-            self.instance.current_player.on(diff)
-            delay = max(1.0 / self.instance.target_fps - diff, 0)
-            time.sleep(delay)
-            self.instance.prev_time = curr_time
+            self.instance.current_player.on(frame_time / 1000)
+            pygame.display.set_caption('FurryTanks - %.2f FPS' % clock.get_fps())
 
