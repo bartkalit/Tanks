@@ -11,8 +11,8 @@ class Drive(Enum):
 
 
 class Rotate(Enum):
-    RIGHT = 1
     LEFT = 0
+    RIGHT = 1
 
 
 class PlayerController:
