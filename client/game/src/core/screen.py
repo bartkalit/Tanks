@@ -41,13 +41,13 @@ class Screen(object):
     def loop(self):
         running = True
         while running:
-            self.instance.current_player.on()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
 
             curr_time = time.time()
             diff = curr_time - self.instance.prev_time
+            self.instance.current_player.on(diff)
             delay = max(1.0 / self.instance.target_fps - diff, 0)
             time.sleep(delay)
             self.instance.prev_time = curr_time

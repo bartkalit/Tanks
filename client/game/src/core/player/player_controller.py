@@ -19,20 +19,20 @@ class PlayerController:
     def __init__(self, player):
         self.player = player
 
-    def on(self):
+    def on(self, time):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w]:
-            self.drive(Drive.FORWARD)
+            self.drive(Drive.FORWARD, time)
         if keys[pygame.K_s]:
-            self.drive(Drive.BACKWARD)
+            self.drive(Drive.BACKWARD, time)
         if keys[pygame.K_a]:
-            self.rotate(Rotate.LEFT)
+            self.rotate(Rotate.LEFT, time)
         if keys[pygame.K_d]:
-            self.rotate(Rotate.RIGHT)
+            self.rotate(Rotate.RIGHT, time)
 
-    def drive(self, drive: Drive):
+    def drive(self, drive: Drive, time):
         pos = self.player.position
-        speed = Config.player['speed']['drive']
+        speed = Config.player['speed']['drive'] * time
         radians = -self.player.angle * pi / 180
         if drive == Drive.FORWARD:
             x = pos[0] + (speed * cos(radians))
@@ -46,8 +46,8 @@ class PlayerController:
         self.player.move(new_position)
         # TODO: Send new position to the server
 
-    def rotate(self, angle: Rotate):
-        rotate_speed = Config.player['speed']['rotate']
+    def rotate(self, angle: Rotate, time):
+        rotate_speed = Config.player['speed']['rotate'] * time
         if angle == Rotate.LEFT:
             new_angle = rotate_speed
         else:
