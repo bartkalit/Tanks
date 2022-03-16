@@ -32,7 +32,6 @@ class Player:
         self.game.refresh_ground()
 
         self.screen.blit(self.tank.image, self.tank.rect)
-        pygame.draw.rect(self.screen, (255, 0 ,0), (self.tank.rect.x, self.tank.rect.y, self.tank.rect.width, self.tank.rect.height), 2)
         # tank_copy = pygame.transform.rotate(self.tank, -self.angle)
         # x, y = self.position
         # new_position = [x - int(tank_copy.get_width() / 2), y - int(tank_copy.get_height() / 2)]
@@ -42,7 +41,10 @@ class Player:
         pass
 
     def _wall_collide(self):
-        return len(pygame.sprite.spritecollide(self.tank, self.map.walls, False)) == 0
+        for wall in pygame.sprite.spritecollide(self.tank, self.map.walls, False):
+            if pygame.sprite.collide_mask(wall, self.tank):
+                return False
+        return True
 
     def move(self, position):
         self.tank.move(position)
