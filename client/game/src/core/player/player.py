@@ -20,7 +20,9 @@ class Player:
         self.points = 0
         self.bullets = 5
         self.reload = 0
-        self._tank_scale = 0.7
+        self._tank_scale = Config.player['tank']['scale']
+        self._alive = True
+        self._kill_count = 0
         self.create_tank()
 
     def create_tank(self):
@@ -39,12 +41,8 @@ class Player:
         return -degrees(atan2(map_y - y, map_x - x))
 
     def draw(self):
-        self.screen.blit(self.tank.image, self.tank.rect)
-        # tank_copy = pygame.transform.rotate(self.tank, -self.angle)
-        # x, y = self.position
-        # new_position = [x - int(tank_copy.get_width() / 2), y - int(tank_copy.get_height() / 2)]
-        # self.screen.blit(tank_copy, new_position)
-        # print(tank_copy.get_rect())
+        if self.is_alive():
+            self.screen.blit(self.tank.image, self.tank.rect)
         pass
 
     def _wall_collide(self):
@@ -58,7 +56,7 @@ class Player:
             if self == player:
                 continue
 
-            if pygame.sprite.collide_mask(self.tank, player.tank):
+            if player.is_alive() and pygame.sprite.collide_mask(self.tank, player.tank):
                 return True
 
         return False
@@ -90,7 +88,7 @@ class Player:
         if self.bullets > 0:
             self.bullets -= 1
             new_x, new_y = self.get_barrel_position()
-            self.game.bullet_controller.add_bullet((new_x, new_y), self.angle)
+            self.game.bullet_controller.add_bullet(self, (new_x, new_y), self.angle)
             # TODO: Create bullet & emit information to the server
         else:
             print('You don`t have enough bullets in your magazine')
@@ -108,8 +106,15 @@ class Player:
         radians = -self.angle * pi / 180
         new_x = x + (h * cos(radians))
         new_y = y + (h * sin(radians))
-        print("player:")
-        print(f"x = {x} y = {y}")
-        print("bullet:")
-        print(f"x = {new_x} y = {new_y}")
         return new_x, new_y
+
+    def die(self):
+        # TODO: Discuss if we want to leave player without sprite
+        self._alive = False
+        del self.tank
+
+    def is_alive(self):
+        return self._alive
+
+    def add_kill(self):
+        self._kill_count += 1

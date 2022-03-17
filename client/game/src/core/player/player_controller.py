@@ -21,19 +21,20 @@ class PlayerController:
         self.reload_time = 0
 
     def on(self, time):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_w]:
-            self.drive(Drive.FORWARD, time)
-        if keys[pygame.K_s]:
-            self.drive(Drive.BACKWARD, time)
-        if keys[pygame.K_a]:
-            self.rotate(Rotate.LEFT, time)
-        if keys[pygame.K_d]:
-            self.rotate(Rotate.RIGHT, time)
-        if keys[pygame.K_SPACE]:
-            self.shot()
-        if self.reload_time > 0:
-            self.reload_time -= time
+        if self.player.is_alive():
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_w]:
+                self.drive(Drive.FORWARD, time)
+            if keys[pygame.K_s]:
+                self.drive(Drive.BACKWARD, time)
+            if keys[pygame.K_a]:
+                self.rotate(Rotate.LEFT, time)
+            if keys[pygame.K_d]:
+                self.rotate(Rotate.RIGHT, time)
+            if keys[pygame.K_SPACE]:
+                self.shot()
+            if self.reload_time > 0:
+                self.reload_time -= time
 
     def drive(self, drive: Drive, time):
         x, y = self.player.position
@@ -69,5 +70,6 @@ class PlayerController:
         if self.reload_time <= 0:
             self.reload_time = Config.bulllet['reload']
             self.player.shot()
+            # TODO: Send bullet popsition to the server
         else:
             print(f"You're reloading : wait {round(self.reload_time, 1)}s")

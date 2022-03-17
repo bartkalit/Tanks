@@ -3,6 +3,9 @@ class Config:
         'speed': {
             'drive': 120,
             'rotate': 80
+        },
+        'tank': {
+            'scale': 0.7
         }
     }
 

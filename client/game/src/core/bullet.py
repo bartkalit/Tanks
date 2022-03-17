@@ -4,8 +4,9 @@ from client.game.src.utils.sprite import BulletSprite
 
 
 class Bullet:
-    def __init__(self, screen, position, angle):
+    def __init__(self, screen, player, position, angle):
         self.screen = screen
+        self.player = player
         self.bullet = None
         self.position = position
         self.angle = angle
