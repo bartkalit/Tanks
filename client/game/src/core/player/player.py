@@ -29,41 +29,53 @@ class Player:
 
         self.tank = TankSprite(self.position, pygame.transform.scale(tank, (width, height)))
 
-    def draw(self):
-        self.game.refresh_ground()
+        self.game.refresh_players()
 
+    def draw(self):
         self.screen.blit(self.tank.image, self.tank.rect)
         # tank_copy = pygame.transform.rotate(self.tank, -self.angle)
         # x, y = self.position
         # new_position = [x - int(tank_copy.get_width() / 2), y - int(tank_copy.get_height() / 2)]
         # self.screen.blit(tank_copy, new_position)
         # print(tank_copy.get_rect())
-        pygame.display.update()
         pass
 
     def _wall_collide(self):
         for wall in pygame.sprite.spritecollide(self.tank, self.map.walls, False):
             if pygame.sprite.collide_mask(wall, self.tank):
-                return False
-        return True
+                return True
+        return False
+
+    def _player_collide(self):
+        for player in self.game.players:
+            if self == player:
+                continue
+
+            if pygame.sprite.collide_mask(self.tank, player.tank):
+                return True
+
+        return False
+
+    def _collide(self):
+        return self._player_collide() or self._wall_collide()
 
     def move(self, position):
         self.tank.move(position)
-        if self._wall_collide():
-            self.position = position
-            self.draw()
-        else:
+        if self._collide():
             self.tank.move(self.position)
+        else:
+            self.position = position
+            self.game.refresh_players()
         # TODO: Emit information to the server
         pass
 
     def rotate(self, angle):
         self.tank.rotate(self.angle + angle)
-        if self._wall_collide():
-            self.angle += angle
-            self.draw()
-        else:
+        if self._collide():
             self.tank.rotate(self.angle)
+        else:
+            self.angle += angle
+            self.game.refresh_players()
         # TODO: Emit information to the server
         pass
 

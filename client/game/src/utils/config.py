@@ -5,3 +5,7 @@ class Config:
             'rotate': 80
         }
     }
+
+    game = {
+        'fps': 60
+    }

@@ -9,8 +9,12 @@ class Game:
     def __init__(self, screen):
         self.screen = screen
         self.map = self._load_map('kyiv')
+        self.players = []
         self.assets = Assets(screen, self.map)
         pass
+
+    def add_player(self, player):
+        self.players.append(player)
 
     def load_assets(self):
         x, y = 0, 0
@@ -24,12 +28,19 @@ class Game:
     def refresh_map(self):
         self.refresh_ground()
         self.refresh_walls()
+        self.refresh_players()
 
     def refresh_ground(self):
         self.map.ground.draw(self.screen)
 
     def refresh_walls(self):
         self.map.walls.draw(self.screen)
+
+    def refresh_players(self):
+        self.refresh_ground()
+        for player in self.players:
+            player.draw()
+        pygame.display.update()
 
     def _load_map(self, map_name: str) -> Map:
         try:
