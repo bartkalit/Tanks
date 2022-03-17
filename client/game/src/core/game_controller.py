@@ -35,6 +35,7 @@ class GameController:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            self.game.refresh_bullets(frame_time / 1000)
             self.current_player.on(frame_time / 1000)
+            self.game.bullet_controller.move_bullets(frame_time / 1000)
+            self.game.refresh_map()
             pygame.display.set_caption('FurryTanks - %.2f FPS' % clock.get_fps())

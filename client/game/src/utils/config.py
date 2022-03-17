@@ -11,5 +11,7 @@ class Config:
     }
 
     bulllet = {
-        'speed': 50
+        'speed': 250,
+        'scale': 0.09,
+        'reload': 3
     }

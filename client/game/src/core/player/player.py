@@ -1,4 +1,4 @@
-from math import sqrt, atan2, degrees
+from math import sqrt, atan2, degrees, cos, sin, pi
 
 import pygame
 
@@ -25,12 +25,8 @@ class Player:
     def create_tank(self):
         tank = pygame.image.load('assets/textures/tank' + str(self.id) + '.png')
 
-        (w, h) = self.screen.get_size()
-        width = w / self.map.width * self._tank_scale
-        height = h / self.map.height * self._tank_scale
-
         self.position = self.map.get_spawn_point
-        self.tank = TankSprite(self.position, pygame.transform.scale(tank, (width, height)))
+        self.tank = TankSprite(self.position, pygame.transform.scale(tank, self.get_tank_size()))
         self.rotate(self.init_angle())
         self.game.refresh_players()
 
@@ -97,3 +93,21 @@ class Player:
         else:
             print('You don`t have enough bullets in your magazine')
 
+    def get_tank_size(self):
+        (w, h) = self.screen.get_size()
+        width = w / self.map.width * self._tank_scale
+        height = h / self.map.height * self._tank_scale
+        return width, height
+
+    def get_barrel_position(self):
+        x, y = self.position
+        w, h = self.get_tank_size()
+        h /= 1.5
+        radians = -self.angle * pi / 180
+        new_x = x + (h * cos(radians))
+        new_y = y + (h * sin(radians))
+        print("player:")
+        print(f"x = {x} y = {y}")
+        print("bullet:")
+        print(f"x = {new_x} y = {new_y}")
+        return new_x, new_y

@@ -18,6 +18,7 @@ class Rotate(Enum):
 class PlayerController:
     def __init__(self, player):
         self.player = player
+        self.reload_time = 0
 
     def on(self, time):
         keys = pygame.key.get_pressed()
@@ -30,21 +31,22 @@ class PlayerController:
         if keys[pygame.K_d]:
             self.rotate(Rotate.RIGHT, time)
         if keys[pygame.K_SPACE]:
-            self.shoot(time)
+            self.shoot()
+        if self.reload_time > 0:
+            self.reload_time -= time
 
     def drive(self, drive: Drive, time):
-        pos = self.player.position
+        x, y = self.player.position
         speed = Config.player['speed']['drive'] * time
         radians = -self.player.angle * pi / 180
         if drive == Drive.FORWARD:
-            x = pos[0] + (speed * cos(radians))
-            y = pos[1] + (speed * sin(radians))
-            new_position = (x, y)
+            new_x = x + (speed * cos(radians))
+            new_y = y + (speed * sin(radians))
         else:
-            x = pos[0] - (speed * cos(radians))
-            y = pos[1] - (speed * sin(radians))
-            new_position = (x, y)
+            new_x = x - (speed * cos(radians))
+            new_y = y - (speed * sin(radians))
 
+        new_position = (new_x, new_y)
         self.player.move(new_position)
         # TODO: Send new position to the server
 
@@ -63,9 +65,14 @@ class PlayerController:
         self.player.rotate(new_angle)
         # TODO: Send new angle to the server
 
-    def shoot(self, time):
-        x, y = self.player.position
-        # TODO: Calculate position in front of the tank and replace hard coded 20
-        new_x = x + sin(self.player.angle) * 20
-        new_y = y + cos(self.player.angle) * 20
-        self.player.game.bullet_controller.add_bullet((new_x, new_y), self.player.angle)
+    def shoot(self):
+        if self.reload_time <= 0:
+            self.reload_time = Config.bulllet['reload']
+            x, y = self.player.position
+            # TODO: Calculate position in front of the tank and replace hard coded 20
+            new_x, new_y = self.player.get_barrel_position()
+            # new_x = x + sin(self.player.angle) * 20
+            # new_y = y + cos(self.player.angle) * 20
+            self.player.game.bullet_controller.add_bullet((new_x, new_y), self.player.angle)
+        else:
+            print("poleruj lufe frajerze")

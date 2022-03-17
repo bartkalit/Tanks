@@ -6,7 +6,6 @@ from client.game.src.utils.assets import Assets
 
 
 class Game:
-
     def __init__(self, screen):
         self.screen = screen
         self.map = self._load_map('kyiv')
@@ -31,6 +30,8 @@ class Game:
         self.refresh_ground()
         self.refresh_walls()
         self.refresh_players()
+        # self.refresh_bullets()
+        pygame.display.update()
 
     def refresh_ground(self):
         self.map.ground.draw(self.screen)
@@ -42,10 +43,11 @@ class Game:
         self.refresh_ground()
         for player in self.players:
             player.draw()
+        self.refresh_bullets()
         pygame.display.update()
 
-    def refresh_bullets(self, time):
-        self.bullet_controller.update_bullets(time)
+    def refresh_bullets(self):
+        self.bullet_controller.draw()
 
     def _load_map(self, map_name: str) -> Map:
         try:

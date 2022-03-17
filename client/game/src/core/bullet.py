@@ -18,4 +18,5 @@ class Bullet:
         self.screen.blit(self.bullet.image, self.bullet.rect)
 
     def move(self, position):
+        self.position = position
         self.bullet.move(position)
