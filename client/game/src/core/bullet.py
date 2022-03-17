@@ -20,3 +20,6 @@ class Bullet:
     def move(self, position):
         self.position = position
         self.bullet.move(position)
+
+    def delete_sprite(self):
+        del self.bullet

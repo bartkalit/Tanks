@@ -10,6 +10,7 @@ class BulletController:
     def __init__(self, game):
         self.game = game
         self.bullets = []
+        self.consumed_bullets = []
 
     def add_bullet(self, position, angle):
         self.bullets.append(Bullet(self.game.screen, position, angle))
@@ -18,9 +19,14 @@ class BulletController:
         for bullet in self.bullets:
             bullet.draw()
 
-    def move_bullets(self, time):
+    def update_bullets(self, time):
         for bullet in self.bullets:
             self.move(bullet, time)
+
+        for bullet in self.consumed_bullets:
+            self.bullets.remove(bullet)
+            self._delete_bullet(bullet)
+        self.consumed_bullets.clear()
 
     def move(self, bullet, time):
         speed = Config.bulllet['speed'] * time
@@ -29,3 +35,29 @@ class BulletController:
         new_x = x + (speed * cos(radians))
         new_y = y + (speed * sin(radians))
         bullet.move((new_x, new_y))
+
+        # TODO: Check if additional collision check isn't needed before moving bullet
+        if self._collide(bullet):
+            self.consumed_bullets.append(bullet)
+
+    @staticmethod
+    def _delete_bullet(bullet):
+        bullet.delete_sprite()
+        del bullet
+
+    def _wall_collide(self, bullet):
+        for wall in pygame.sprite.spritecollide(bullet.bullet, self.game.map.walls, False):
+            if pygame.sprite.collide_mask(wall, bullet.bullet):
+                return True
+        return False
+
+    def _player_collide(self, bullet):
+        for player in self.game.players:
+            if pygame.sprite.collide_mask(bullet.bullet, player.tank):
+                return True
+
+        return False
+
+    def _collide(self, bullet):
+        return self._player_collide(bullet) or self._wall_collide(bullet)
+

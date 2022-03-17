@@ -31,7 +31,7 @@ class PlayerController:
         if keys[pygame.K_d]:
             self.rotate(Rotate.RIGHT, time)
         if keys[pygame.K_SPACE]:
-            self.shoot()
+            self.shot()
         if self.reload_time > 0:
             self.reload_time -= time
 
@@ -65,14 +65,9 @@ class PlayerController:
         self.player.rotate(new_angle)
         # TODO: Send new angle to the server
 
-    def shoot(self):
+    def shot(self):
         if self.reload_time <= 0:
             self.reload_time = Config.bulllet['reload']
-            x, y = self.player.position
-            # TODO: Calculate position in front of the tank and replace hard coded 20
-            new_x, new_y = self.player.get_barrel_position()
-            # new_x = x + sin(self.player.angle) * 20
-            # new_y = y + cos(self.player.angle) * 20
-            self.player.game.bullet_controller.add_bullet((new_x, new_y), self.player.angle)
+            self.player.shot()
         else:
-            print("poleruj lufe frajerze")
+            print(f"You're reloading : wait {round(self.reload_time, 1)}s")

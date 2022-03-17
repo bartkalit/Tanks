@@ -2,15 +2,16 @@ from math import sqrt, atan2, degrees, cos, sin, pi
 
 import pygame
 
+from client.game.src.utils.config import Config
 from client.game.src.utils.sprite import TankSprite
 
 
 class Player:
-    def __init__(self, screen, game, id: int, position=None):
+    def __init__(self, game, id: int, position=None):
         if position is None:
             position = (400, 400)
-        self.screen = screen
         self.game = game
+        self.screen = game.screen
         self.map = game.map
         self.tank = None
         self.id = id
@@ -88,7 +89,8 @@ class Player:
     def shot(self):
         if self.bullets > 0:
             self.bullets -= 1
-
+            new_x, new_y = self.get_barrel_position()
+            self.game.bullet_controller.add_bullet((new_x, new_y), self.angle)
             # TODO: Create bullet & emit information to the server
         else:
             print('You don`t have enough bullets in your magazine')
