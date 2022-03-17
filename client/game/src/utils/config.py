@@ -5,7 +5,8 @@ class Config:
             'rotate': 80
         },
         'tank': {
-            'scale': 0.7
+            'scale': 0.7,
+            'magazine': 6
         }
     }
 

@@ -18,7 +18,7 @@ class Player:
         self.position = position
         self.angle = 0
         self.points = 0
-        self.bullets = 5
+        self.bullets = Config.player['tank']['magazine']
         self.reload = 0
         self._tank_scale = Config.player['tank']['scale']
         self._alive = True
