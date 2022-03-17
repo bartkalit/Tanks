@@ -29,6 +29,8 @@ class PlayerController:
             self.rotate(Rotate.LEFT, time)
         if keys[pygame.K_d]:
             self.rotate(Rotate.RIGHT, time)
+        if keys[pygame.K_SPACE]:
+            self.shoot(time)
 
     def drive(self, drive: Drive, time):
         pos = self.player.position
@@ -60,3 +62,10 @@ class PlayerController:
 
         self.player.rotate(new_angle)
         # TODO: Send new angle to the server
+
+    def shoot(self, time):
+        x, y = self.player.position
+        # TODO: Calculate position in front of the tank and replace hard coded 20
+        new_x = x + sin(self.player.angle) * 20
+        new_y = y + cos(self.player.angle) * 20
+        self.player.game.bullet_controller.add_bullet((new_x, new_y), self.player.angle)

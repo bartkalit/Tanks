@@ -13,7 +13,6 @@ class GameController:
         self.game = Game(screen)
         self.game.load_assets()
         self.game.refresh_map()
-
         self.current_player = None
 
     def join(self):
@@ -36,6 +35,6 @@ class GameController:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-
+            self.game.refresh_bullets(frame_time / 1000)
             self.current_player.on(frame_time / 1000)
             pygame.display.set_caption('FurryTanks - %.2f FPS' % clock.get_fps())

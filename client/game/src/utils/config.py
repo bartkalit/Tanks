@@ -9,3 +9,7 @@ class Config:
     game = {
         'fps': 60
     }
+
+    bulllet = {
+        'speed': 50
+    }

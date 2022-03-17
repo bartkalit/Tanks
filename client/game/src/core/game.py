@@ -1,5 +1,6 @@
 import pygame
 
+from client.game.src.core.bullet_controller import BulletController
 from client.game.src.core.map import Map
 from client.game.src.utils.assets import Assets
 
@@ -11,6 +12,7 @@ class Game:
         self.map = self._load_map('kyiv')
         self.players = []
         self.assets = Assets(screen, self.map)
+        self.bullet_controller = BulletController(self)
         pass
 
     def add_player(self, player):
@@ -41,6 +43,9 @@ class Game:
         for player in self.players:
             player.draw()
         pygame.display.update()
+
+    def refresh_bullets(self, time):
+        self.bullet_controller.update_bullets(time)
 
     def _load_map(self, map_name: str) -> Map:
         try:
