@@ -1,6 +1,7 @@
 class Blocks:
     wall = 'wall'
     ground = 'ground'
+    spawn_point = 'spawn'
 
     @staticmethod
     def getAll():
@@ -12,3 +13,5 @@ class Blocks:
             return Blocks.wall
         if char == '.':
             return Blocks.ground
+        if char == 'S':
+            return Blocks.spawn_point

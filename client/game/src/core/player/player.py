@@ -1,3 +1,5 @@
+from math import sqrt, atan2, degrees
+
 import pygame
 
 from client.game.src.utils.sprite import TankSprite
@@ -27,9 +29,17 @@ class Player:
         width = w / self.map.width * self._tank_scale
         height = h / self.map.height * self._tank_scale
 
+        self.position = self.map.get_spawn_point
         self.tank = TankSprite(self.position, pygame.transform.scale(tank, (width, height)))
-
+        self.rotate(self.init_angle())
         self.game.refresh_players()
+
+    def init_angle(self):
+        map_x, map_y = self.screen.get_size()
+        map_x /= 2
+        map_y /= 2
+        x, y = self.position
+        return -degrees(atan2(map_y - y, map_x - x))
 
     def draw(self):
         self.screen.blit(self.tank.image, self.tank.rect)

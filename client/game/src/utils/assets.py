@@ -30,9 +30,16 @@ class Assets:
     def set_ground(self, position):
         self.map.add_ground(Sprite(position, self.all[Blocks.ground]))
 
+    def set_spawn_point(self, position):
+        self.map.add_spawn_point(position)
+        self.map.add_ground(Sprite(position, self.all[Blocks.ground]))
+
+
     def set_block(self, char, position):
         block = Blocks.getBlock(char)
         if block == Blocks.wall:
             self.set_wall(position)
         if block == Blocks.ground:
             self.set_ground(position)
+        if block == Blocks.spawn_point:
+            self.set_spawn_point(position)
