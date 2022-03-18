@@ -59,12 +59,13 @@ class PlayerController:
 
     def drive(self, drive: Drive, time):
         x, y = self.player.position
-        speed = Config.player['speed']['drive'] * time
         radians = -self.player.angle * pi / 180
         if drive == Drive.FORWARD:
+            speed = Config.player['speed']['drive']['forward'] * time
             new_x = x + (speed * cos(radians))
             new_y = y + (speed * sin(radians))
         else:
+            speed = Config.player['speed']['drive']['backward'] * time
             new_x = x - (speed * cos(radians))
             new_y = y - (speed * sin(radians))
 

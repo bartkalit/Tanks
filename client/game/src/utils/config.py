@@ -1,7 +1,10 @@
 class Config:
     player = {
         'speed': {
-            'drive': 120,
+            'drive': {
+                'forward': 120,
+                'backward': 70
+            },
             'rotate': 80
         },
         'tank': {
