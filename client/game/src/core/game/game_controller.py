@@ -1,6 +1,6 @@
 import pygame
 
-from client.game.src.core.game import Game
+from client.game.src.core.game.game import Game
 from client.game.src.core.player.player import Player
 from client.game.src.core.player.player_controller import PlayerController
 from client.game.src.utils.config import Config
@@ -17,10 +17,10 @@ class GameController:
 
     def join(self):
         players = self.game.players
-        player = Player(self.game, len(players) + 1, ((len(players) + 1) * 100, (len(players) + 1) * 100))
-        print(self.current_player)
+        player = Player(self.game, len(players) + 1)
         if self.current_player is None:
-            self.current_player = PlayerController(player)
+            player.change_current()
+            self.current_player = PlayerController(player, self.screen)
         self.game.add_player(player)
 
     def start(self):

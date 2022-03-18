@@ -1,8 +1,8 @@
-from math import sin, cos, degrees, pi
+from math import sin, cos, pi
 
 import pygame
 
-from client.game.src.core.bullet import Bullet
+from client.game.src.core.bullet.bullet import Bullet
 from client.game.src.utils.config import Config
 
 
@@ -22,6 +22,7 @@ class BulletController:
     def update_bullets(self, time):
         for bullet in self.bullets:
             self.move(bullet, time)
+        # TODO: Send position to the server
 
         for bullet in self.consumed_bullets:
             self.bullets.remove(bullet)
@@ -29,7 +30,7 @@ class BulletController:
         self.consumed_bullets.clear()
 
     def move(self, bullet, time):
-        speed = Config.bulllet['speed'] * time
+        speed = Config.bullet['speed'] * time
         x, y = bullet.position
         radians = -bullet.angle * pi / 180
         new_x = x + (speed * cos(radians))
@@ -41,9 +42,12 @@ class BulletController:
             self.consumed_bullets.append(bullet)
             player = self._player_collide(bullet)
             if player:
-                bullet.player.add_kill()
-                player.die()
-
+                if player.lives > 1:
+                    bullet.player.add_hit()
+                    player.was_hit()
+                else:
+                    bullet.player.add_kill()
+                    player.die()
 
     @staticmethod
     def _delete_bullet(bullet):

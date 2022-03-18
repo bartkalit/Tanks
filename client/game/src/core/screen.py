@@ -1,10 +1,8 @@
 import pygame
 import time
 
-from client.game.src.core.game import Game
-from client.game.src.core.game_controller import GameController
-from client.game.src.core.player.player_controller import PlayerController
-from client.game.src.core.player.player import Player
+from client.game.src.core.game.game_controller import GameController
+from client.game.src.utils.config import Config
 
 
 class Screen(object):
@@ -14,8 +12,9 @@ class Screen(object):
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
+            pygame.init()
             cls.instance = super(Screen, cls).__new__(cls)
-            cls.instance.resolution = (800, 800)
+            cls.instance.resolution = (Config.screen['resolution']['width'], Config.screen['resolution']['height'] + Config.screen['stat_bar'])
             cls.instance._set_window()
             cls.instance.game = GameController(cls.instance.screen)
             cls.instance.game.join()

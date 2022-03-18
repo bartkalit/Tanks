@@ -2,6 +2,7 @@ from enum import Enum
 from math import cos, sin, pi
 import pygame
 
+from client.game.src.core.stat_bar.stat_bar import StatBar
 from client.game.src.utils.config import Config
 
 
@@ -16,9 +17,16 @@ class Rotate(Enum):
 
 
 class PlayerController:
-    def __init__(self, player):
+    def __init__(self, player, screen):
+        self.screen = screen
         self.player = player
-        self.reload_time = 0
+        self.draw_ui()
+
+    def draw_ui(self):
+        StatBar.show_avatar(self.screen)
+        StatBar.show_lives(self.screen, self.player)
+        StatBar.show_magazine(self.screen, self.player)
+        StatBar.show_points(self.screen, self.player)
 
     def on(self, time):
         if self.player.is_alive():
@@ -33,8 +41,21 @@ class PlayerController:
                 self.rotate(Rotate.RIGHT, time)
             if keys[pygame.K_SPACE]:
                 self.shot()
-            if self.reload_time > 0:
-                self.reload_time -= time
+            if keys[pygame.K_r]:
+                self._reload_magazine()
+            if self.player.reload_time > 0:
+                self._reload(time)
+
+    def _reload(self, time):
+        self.player.reload_time -= time
+        StatBar.show_reload(self.screen, self.player)
+        if self.player.reload_time <= 0:
+            StatBar.show_magazine(self.screen, self.player)
+
+    def _reload_magazine(self):
+        if self.player.bullets != Config.player['tank']['magazine']:
+            self.player.reload_magazine()
+            self.player.reload_time = Config.player['tank']['reload_magazine']
 
     def drive(self, drive: Drive, time):
         x, y = self.player.position
@@ -67,9 +88,10 @@ class PlayerController:
         # TODO: Send new angle to the server
 
     def shot(self):
-        if self.reload_time <= 0:
-            self.reload_time = Config.bulllet['reload']
+        if self.player.reload_time <= 0:
+            self.player.reload_time = Config.player['tank']['reload_bullet']
             self.player.shot()
-            # TODO: Send bullet popsition to the server
-        else:
-            print(f"You're reloading : wait {round(self.reload_time, 1)}s")
+            StatBar.show_magazine(self.screen, self.player)
+            if self.player.bullets == 0:
+                self._reload_magazine()
+            # TODO: Send bullet position to the server

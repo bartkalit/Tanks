@@ -1,6 +1,6 @@
 import pygame
 
-from client.game.src.core.bullet_controller import BulletController
+from client.game.src.core.bullet.bullet_controller import BulletController
 from client.game.src.core.map import Map
 from client.game.src.utils.assets import Assets
 

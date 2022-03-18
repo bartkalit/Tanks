@@ -1,7 +1,11 @@
+import asyncio
+from asyncio import wait
 from math import sqrt, atan2, degrees, cos, sin, pi
+from time import sleep
 
 import pygame
 
+from client.game.src.core.stat_bar.stat_bar import StatBar
 from client.game.src.utils.config import Config
 from client.game.src.utils.sprite import TankSprite
 
@@ -18,12 +22,19 @@ class Player:
         self.position = position
         self.angle = 0
         self.points = 0
+        self.lives = Config.player['lives']
         self.bullets = Config.player['tank']['magazine']
         self.reload = 0
         self._tank_scale = Config.player['tank']['scale']
         self._alive = True
         self._kill_count = 0
+        self.reload_time = 0
+        self.is_current = False
         self.create_tank()
+        self.points = 0
+
+    def change_current(self):
+        self.is_current = ~self.is_current
 
     def create_tank(self):
         tank = pygame.image.load('assets/textures/tank' + str(self.id) + '.png')
@@ -90,8 +101,9 @@ class Player:
             new_x, new_y = self.get_barrel_position()
             self.game.bullet_controller.add_bullet(self, (new_x, new_y), self.angle)
             # TODO: Create bullet & emit information to the server
-        else:
-            print('You don`t have enough bullets in your magazine')
+
+    def reload_magazine(self):
+        self.bullets = Config.player['tank']['magazine']
 
     def get_tank_size(self):
         (w, h) = self.screen.get_size()
@@ -110,11 +122,36 @@ class Player:
 
     def die(self):
         # TODO: Discuss if we want to leave player without sprite
+        self.lives -= 1
         self._alive = False
         del self.tank
+
+        if self.is_current:
+            StatBar.show_avatar(self.screen, True)
+
+        self._update_hearts_ui()
+
+    def was_hit(self):
+        self.lives -= 1
+
+        self._update_hearts_ui()
+
+    def _update_hearts_ui(self):
+        if self.is_current:
+            StatBar.show_lives(self.screen, self)
 
     def is_alive(self):
         return self._alive
 
     def add_kill(self):
         self._kill_count += 1
+        self.points += Config.rewards['kill']
+        if self.is_current:
+            StatBar.show_points(self.screen, self)
+
+    def add_hit(self):
+        self.points += Config.rewards['hit']
+        if self.is_current:
+            StatBar.show_points(self.screen, self)
+        # TODO: Add points
+        pass
