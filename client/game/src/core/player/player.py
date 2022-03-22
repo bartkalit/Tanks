@@ -1,36 +1,46 @@
-from math import sqrt, atan2, degrees
+import asyncio
+from asyncio import wait
+from math import sqrt, atan2, degrees, cos, sin, pi
+from time import sleep
 
 import pygame
 
+from client.game.src.core.stat_bar.stat_bar import StatBar
+from client.game.src.utils.config import Config
 from client.game.src.utils.sprite import TankSprite
 
 
 class Player:
-    def __init__(self, screen, game, id: int, position=None):
+    def __init__(self, game, id: int, position=None):
         if position is None:
             position = (400, 400)
-        self.screen = screen
         self.game = game
+        self.screen = game.screen
         self.map = game.map
         self.tank = None
         self.id = id
         self.position = position
         self.angle = 0
         self.points = 0
-        self.bullets = 5
+        self.lives = Config.player['lives']
+        self.bullets = Config.player['tank']['magazine']
         self.reload = 0
-        self._tank_scale = 0.7
+        self._tank_scale = Config.player['tank']['scale']
+        self._alive = True
+        self._kill_count = 0
+        self.reload_time = 0
+        self.is_current = False
         self.create_tank()
+        self.points = 0
+
+    def change_current(self):
+        self.is_current = ~self.is_current
 
     def create_tank(self):
         tank = pygame.image.load('assets/textures/tank' + str(self.id) + '.png')
 
-        (w, h) = self.screen.get_size()
-        width = w / self.map.width * self._tank_scale
-        height = h / self.map.height * self._tank_scale
-
         self.position = self.map.get_spawn_point
-        self.tank = TankSprite(self.position, pygame.transform.scale(tank, (width, height)))
+        self.tank = TankSprite(self.position, pygame.transform.scale(tank, self.get_tank_size()))
         self.rotate(self.init_angle())
         self.game.refresh_players()
 
@@ -42,12 +52,8 @@ class Player:
         return -degrees(atan2(map_y - y, map_x - x))
 
     def draw(self):
-        self.screen.blit(self.tank.image, self.tank.rect)
-        # tank_copy = pygame.transform.rotate(self.tank, -self.angle)
-        # x, y = self.position
-        # new_position = [x - int(tank_copy.get_width() / 2), y - int(tank_copy.get_height() / 2)]
-        # self.screen.blit(tank_copy, new_position)
-        # print(tank_copy.get_rect())
+        if self.is_alive():
+            self.screen.blit(self.tank.image, self.tank.rect)
         pass
 
     def _wall_collide(self):
@@ -61,7 +67,7 @@ class Player:
             if self == player:
                 continue
 
-            if pygame.sprite.collide_mask(self.tank, player.tank):
+            if player.is_alive() and pygame.sprite.collide_mask(self.tank, player.tank):
                 return True
 
         return False
@@ -92,8 +98,60 @@ class Player:
     def shot(self):
         if self.bullets > 0:
             self.bullets -= 1
-
+            new_x, new_y = self.get_barrel_position()
+            self.game.bullet_controller.add_bullet(self, (new_x, new_y), self.angle)
             # TODO: Create bullet & emit information to the server
-        else:
-            print('You don`t have enough bullets in your magazine')
 
+    def reload_magazine(self):
+        self.bullets = Config.player['tank']['magazine']
+
+    def get_tank_size(self):
+        (w, h) = self.screen.get_size()
+        width = w / self.map.width * self._tank_scale
+        height = h / self.map.height * self._tank_scale
+        return width, height
+
+    def get_barrel_position(self):
+        x, y = self.position
+        w, h = self.get_tank_size()
+        h /= 1.5
+        radians = -self.angle * pi / 180
+        new_x = x + (h * cos(radians))
+        new_y = y + (h * sin(radians))
+        return new_x, new_y
+
+    def die(self):
+        # TODO: Discuss if we want to leave player without sprite
+        self.lives -= 1
+        self._alive = False
+        del self.tank
+
+        if self.is_current:
+            StatBar.show_avatar(self.screen, True)
+
+        self._update_hearts_ui()
+
+    def was_hit(self):
+        self.lives -= 1
+
+        self._update_hearts_ui()
+
+    def _update_hearts_ui(self):
+        if self.is_current:
+            StatBar.show_lives(self.screen, self)
+
+    def is_alive(self):
+        return self._alive
+
+    def add_kill(self):
+        self._kill_count += 1
+        self.points += Config.rewards['kill']
+        if self.is_current:
+            StatBar.show_points(self.screen, self)
+
+    def add_hit(self):
+        self.points += Config.rewards['hit']
+        if self.is_current:
+            StatBar.show_points(self.screen, self)
+        # TODO: Add points
+        pass

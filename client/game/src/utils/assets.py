@@ -1,6 +1,7 @@
 import pygame
 
 from client.game.src.utils.blocks import Blocks
+from client.game.src.utils.config import Config
 from client.game.src.utils.sprite import Sprite
 
 
@@ -19,7 +20,7 @@ class Assets:
 
         (w, h) = self.screen.get_size()
         self.width = w / self.map.width
-        self.height = h / self.map.height
+        self.height = (h - Config.screen['stat_bar']) / self.map.height
         for asset in assets:
             self.all[asset] = pygame.image.load('assets/textures/' + asset + '.png')
             self.all[asset] = pygame.transform.scale(self.all[asset], (self.width, self.height))
