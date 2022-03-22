@@ -88,10 +88,10 @@ class StatBar:
 
         screen.blit(avatar.image, avatar.rect)
 
-        if die:
-            dead = pygame.image.load('assets/avatars/broken_glass2.png')
-            dead = pygame.transform.scale(dead, (asset_size, asset_size))
-
-            dead = Sprite((0, height), dead)
-
-            screen.blit(dead.image, dead.rect)
+        # if die:
+        #     dead = pygame.image.load('assets/avatars/broken_glass.png')
+        #     dead = pygame.transform.scale(dead, (asset_size, asset_size))
+        #
+        #     dead = Sprite((0, height), dead)
+        #
+        #     screen.blit(dead.image, dead.rect)
