@@ -58,7 +58,6 @@ class BotController:
         start_node = maze.find_node('S')
         start_node.visited = True
         end_node = maze.find_node('E')
-        # fscore = {start_node:abs(end_node.x - start_node.x) + abs(end_node.y - start_node.y)}
         start_node.cost = abs(end_node.x - start_node.x) + abs(end_node.y - start_node.y)
         q = []
         id = 0
@@ -75,7 +74,6 @@ class BotController:
                     child.parent = node
                     child.moves_cost = node.moves_cost + maze.move_cost(child)
                     child.cost = abs(end_node.x - child.x) + abs(end_node.y - child.y) + child.moves_cost
-                    # fscore[child] = maze.move_cost(child) + abs(end_node.x - child.x) + abs(end_node.y - child.y)
                     id += 1
                     heappush(q, (child.cost, id, child))
 
@@ -93,23 +91,23 @@ class BotController:
         x = int(player.position[0] / self.game.assets.width)
         y = int(player.position[1] / self.game.assets.height)
         new_map[y][x] = 'E'
-        f = open("assets/maps/maze.txt", "w")
+        '''f = open("assets/maps/maze.txt", "w")
 
         for i in range(len(new_map)):
             for j in range(len(new_map[i])):
                     f.write(str(new_map[i][j]))
             f.write("\n")
         f.close()
-
-
-        maze = Maze("assets/maps/maze.txt")
+        '''
+        maze = Maze(new_map)
         maze.path = self.astar(maze)
         #maze.draw()
-        #print('path length: ', len(maze.path))
-        #for node in maze.path:
-         #   print(f'({node.x}, {node.y})', end=' ')
-        #print()
-
+        '''
+        print('path length: ', len(maze.path))
+        for node in maze.path:
+            print(f'({node.x}, {node.y})', end=' ')
+        print()
+        '''
     def on(self, time):
         if self.player.is_alive():
             keys = pygame.key.get_pressed()

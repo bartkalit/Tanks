@@ -10,6 +10,7 @@ class Node:
         self.parent = None
         self.cost = sys.maxsize  # Inf
         self.moves_cost = 0
+
     def __str__(self):
         if self.type == '.' and self.visited:
             return '_'
@@ -20,6 +21,11 @@ class Node:
 
 
 class Maze:
+
+    def __init__(self, maze):
+        self.maze = self.from_file_new(maze)
+        self.path = []
+
     def from_file(self, path):
         maze = []
         with open(path) as f:
@@ -30,9 +36,14 @@ class Maze:
                 maze.append(x_nodes)
         return maze
 
-    def __init__(self, maze):
-        self.maze = self.from_file(maze)
-        self.path = []
+    def from_file_new(self, maze):
+        nodes = []
+        for x in range(len(maze)):
+            x_nodes = []
+            for y in range(len(maze[x])):
+                x_nodes.append(Node(y, x, maze[x][y]))
+            nodes.append(x_nodes)
+        return nodes
 
     def draw(self):
         for x_nodes in self.maze:
@@ -40,7 +51,7 @@ class Maze:
                 if node in self.path and node.type != 'S' and node.type != 'E':
                     print('*', end='')
                 else:
-                    print(node, end='')
+                    print(node.type, end='')
             print()
 
     def find_node(self, type):
