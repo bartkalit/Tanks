@@ -21,7 +21,7 @@ class Config:
     }
 
     bullet = {
-        'speed': 40,
+        'speed': 180,
         'scale': 0.09
     }
 
