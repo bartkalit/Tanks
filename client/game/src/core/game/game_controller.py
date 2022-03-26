@@ -42,7 +42,7 @@ class GameController:
                 if event.type == pygame.QUIT:
                     running = False
             self.current_player.on(frame_time / 1000)
-            self.bot.find_path()
+            self.bot.on(frame_time / 1000)
             self.game.bullet_controller.update_bullets(frame_time / 1000)
             self.game.refresh_map()
             pygame.display.set_caption('FurryTanks - %.2f FPS' % clock.get_fps())
