@@ -10,7 +10,6 @@ from client.game.src.core.bot.maze import Maze, path_from
 from client.game.src.core.stat_bar.stat_bar import StatBar
 from client.game.src.utils.config import Config
 
-
 class Drive(Enum):
     FORWARD = 0
     BACKWARD = 1
@@ -20,13 +19,26 @@ class Rotate(Enum):
     LEFT = 0
     RIGHT = 1
 
+
 class ExpectRotate(float, Enum):
     UP = 270
     DOWN = 90
-    RIGHT = 0
     LEFT = 180
+    RIGHT = 0
+
+
+class DirectionAngle(float, Enum):
+    UP = 90
+    DOWN = 270
+    LEFT = 180
+    RIGHT = 0
+
 
 class BotController:
+    SHOT_DISTANCE = 30
+    ANGLE_OFFSET = 1
+    POS_OFFSET = 10
+
     def __init__(self, screen, game, player):
         self.screen = screen
         self.game = game
@@ -34,7 +46,7 @@ class BotController:
         self.map = self.read_map(game.map.data)
         self.node = None
         self.x = 0
-        self.y =0
+        self.y = 0
         self.glitch_time = 0
         self.enemy = self.find_closest_player()
 
@@ -53,8 +65,8 @@ class BotController:
         return minPlayer
 
     def read_map(self, map):
-        for i in range(len(map)):
-            print(map[i])
+        # for i in range(len(map)):
+        #     print(map[i])
         for i in range(len(map)):
             map[i] = list(map[i])
             for j in range(len(map[i])):
@@ -90,7 +102,7 @@ class BotController:
         return None
 
     def find_path(self):
-        #player = self.find_closest_player()  # gdyby bylo wiecej graczy trzeba uzywac tej metody
+        # player = self.find_closest_player()  # gdyby bylo wiecej graczy trzeba uzywac tej metody
         player = self.enemy
         new_map = copy.deepcopy(self.map)
         width = self.game.assets.width
@@ -105,68 +117,98 @@ class BotController:
         new_map[y2][x2] = 'E'
 
         if (self.x, self.y) == (x2, y2):
-            return True, None, None
+            return None, None, 0
         maze = Maze(new_map)
         maze.path = self.astar(maze)
         # maze.draw()
-        shot = True
-        if len(maze.path) <= 5:
-            for i in range(len(maze.path)):
-                if self.x != maze.path[i].x:
-                    shot = False
-                if shot:
-                    for i in range(len(maze.path)):
-                        if self.y != maze.path[i].y:
-                            shot = False
 
         act = maze.path[len(maze.path) - 1]
         new = maze.path[len(maze.path) - 2]
-        return shot, (act.x, act.y), (new.x, new.y)
+        return (act.x, act.y), (new.x, new.y), len(maze.path)
 
     def move(self):
-        shot, actual_poit, new_point = self.find_path()
-        if (actual_poit != None):
-            if (actual_poit[1] < new_point[1]):
-                return shot, ExpectRotate.UP  # up
-            if (actual_poit[1] > new_point[1]):
-                return shot, ExpectRotate.DOWN  # down
-            if (actual_poit[0] < new_point[0]):
-                return shot, ExpectRotate.RIGHT  # right
-            if (actual_poit[0] > new_point[0]):
-                return shot, ExpectRotate.LEFT  # left
-        return shot, self.player.angle  # stay
+        if self.enemy.is_alive():
+            actual_point, new_point, length = self.find_path()
+            if actual_point:
+                if actual_point[1] < new_point[1]:
+                    return length, ExpectRotate.UP
+                if actual_point[1] > new_point[1]:
+                    return length, ExpectRotate.DOWN
+                if actual_point[0] < new_point[0]:
+                    return length, ExpectRotate.RIGHT
+                if actual_point[0] > new_point[0]:
+                    return length, ExpectRotate.LEFT
+        return 0, self.player.angle  # stay
+
+    def shot_condition(self, length):
+        """
+        Checks if enemy is in a straight line with a bot and if bot faces the enemy
+        :param int length: Length of a shortest path between bot and an enemy in a number of tiles
+        :return: If bot is supposed to shot
+        :rtype: bool
+        """
+        e_x, e_y = self.enemy.position
+        b_x, b_y = self.player.position
+        b_angle = self.player.angle
+        if length < self.SHOT_DISTANCE:
+            if b_x - self.POS_OFFSET <= e_x <= b_x + self.POS_OFFSET:
+                # enemy above
+                if b_y > e_y:
+                    if DirectionAngle.UP - self.ANGLE_OFFSET <= b_angle<= DirectionAngle.UP + self.ANGLE_OFFSET:
+                        return True
+                # enemy below
+                if b_y < e_y:
+                    if DirectionAngle.DOWN - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.DOWN + self.ANGLE_OFFSET:
+                        return True
+            elif b_y - self.POS_OFFSET <= e_y <= b_y + self.POS_OFFSET:
+                # enemy on a left
+                if b_x > e_x:
+                    if DirectionAngle.LEFT - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.LEFT + self.ANGLE_OFFSET:
+                        return True
+                # enemy on a right
+                if b_x < e_x:
+                    if DirectionAngle.RIGHT - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.RIGHT + self.ANGLE_OFFSET:
+                        return True
+        return False
+
+    @staticmethod
+    def whole_angle(angle):
+        if -45 < angle < 45:
+            return 0
+        elif 45 < angle < 135:
+            return 90
+        elif 135 < angle < 225:
+            return 180
+        else:
+            return 270
 
     def on(self, time):
         if self.player.is_alive():
-            shot, rotate = self.move()
+            self._reload(time)
+            length, rotate = self.move()
+            shot = self.shot_condition(length)
             angle = self.player.angle - rotate
-
-            '''if abs(angle) < 1:
-                if rotate == 0 and self.player.position[0] <= self.node[
-                    0] * self.game.assets.width + self.game.assets.width / 2 or \
-                        rotate == 180 and self.player.position[0] >= self.node[
-                    0] * self.game.assets.width + self.game.assets.width / 2 or \
-                        rotate == 270 and self.player.position[1] <= self.node[
-                    1] * self.game.assets.height + self.game.assets.height / 2 or \
-                        rotate == 270 and self.player.position[1] >= self.node[
-                    1] * self.game.assets.height + self.game.assets.height / 2:
-                    angle = 0'''
             width = self.game.assets.width
             height = self.game.assets.height
-            if angle != 0 and (-1 < self.player.angle < 1 and self.x*width > self.player.position[0] - width/2
-                               or 179 < self.player.angle < 181 and self.player.position[0] > (self.x+1)*width - width/2
-                               or 269 < self.player.angle < 271 and self.y*height >= self.player.position[1] - height/2
-                               or 89 < self.player.angle < 91 and self.player.position[1] > (self.y+1)*height - height/2):
+            if angle != 0 and (-1 < self.player.angle < 1 and self.x * width > self.player.position[0] - width / 2
+                               or 179 < self.player.angle < 181 and self.player.position[0] > (
+                                       self.x + 1) * width - width / 2
+                               or 269 < self.player.angle < 271 and self.y * height >= self.player.position[
+                                   1] - height / 2
+                               or 89 < self.player.angle < 91 and self.player.position[1] > (
+                                       self.y + 1) * height - height / 2):
                 angle = 0
 
+            if shot:
+                self.shot()
             if angle > 1:
-                self.rotate(Rotate.RIGHT, 2*time)
+                self.rotate(Rotate.RIGHT, 2 * time)
 
             elif angle < -1:
-                self.rotate(Rotate.LEFT,  2*time)
+                self.rotate(Rotate.LEFT, 2 * time)
             else:
-                if shot:
-                    self.shot()
+
+                self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
                 if self.glitch_time < 0:
                     self.drive(Drive.BACKWARD, time)
                     move_value = 1
