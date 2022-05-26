@@ -46,6 +46,7 @@ class PlayerController:
             if self.player.reload_time > 0:
                 self._reload(time)
 
+
     def _reload(self, time):
         self.player.reload_time -= time
         StatBar.show_reload(self.screen, self.player)
