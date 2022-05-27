@@ -2,6 +2,9 @@ import sys
 from enum import Enum
 from heapq import *
 from math import cos, sin, pi, sqrt
+import random
+
+import numpy as np
 import pygame
 import copy
 
@@ -148,6 +151,35 @@ class BotController:
         e_x, e_y = self.enemy.position
         b_x, b_y = self.player.position
         return sqrt(pow(b_x - e_x, 2) + pow(b_y - e_y, 2))
+
+    def move2(self):
+        moves = []
+        actual_point = ""
+        if self.enemy.is_alive():
+            actual_point, new_point, length = self.find_path()
+            if actual_point:
+                if not (actual_point[1] < new_point[1]) and self.map[actual_point[0]][actual_point[1] - 1] != "#":
+                   moves.append([length, DirectionAngle.DOWN])
+                if not (actual_point[1] > new_point[1]) and self.map[actual_point[0]][actual_point[1] + 1] != "#":
+                    print(self.map[actual_point[0]][actual_point[1] - 1])
+                    moves.append([length, DirectionAngle.UP])
+                if not (actual_point[0] < new_point[0]) and self.map[actual_point[0] - 1][actual_point[1]] != "#":
+                    moves.append([length, DirectionAngle.RIGHT])
+                if not (actual_point[0] > new_point[0]) and self.map[actual_point[0] + 1][actual_point[1]] != "#":
+                    moves.append([length, DirectionAngle.LEFT])
+        print(actual_point, new_point, moves)
+        if len(moves):
+            for angle in list(zip(*moves))[1]:
+                if angle - 1 < self.player.angle < angle + 1:
+                    #print("1")
+                    return 0, self.player.angle  # stay
+
+            r = random.randrange(0, len(moves), 1)
+            #print("2")
+            return moves[r][0], moves[r][1]
+        #print("3")
+        return 0, self.player.angle  # stay
+
 
     def shot_condition(self, length):
         """
