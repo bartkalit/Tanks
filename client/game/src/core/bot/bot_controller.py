@@ -141,6 +141,10 @@ class BotController:
         return 0, self.player.angle  # stay
 
     def diagonal_distance(self):
+        """
+        :return: diagonal distance between bot and an enemy
+        :rtype: float
+        """
         e_x, e_y = self.enemy.position
         b_x, b_y = self.player.position
         return sqrt(pow(b_x - e_x, 2) + pow(b_y - e_y, 2))
@@ -152,44 +156,50 @@ class BotController:
         :return: If bot is supposed to shot
         :rtype: bool
         """
-        e_x, e_y = self.enemy.position
-        b_x, b_y = self.player.position
-        b_angle = self.player.angle
-        width = self.game.assets.width
-        height = self.game.assets.height
-        tile_size = (width + height) / 2
-        print(f"{length} {self.diagonal_distance() / width}")
-        if length - 1 < self.diagonal_distance() / tile_size:
-            if b_x - self.POS_OFFSET <= e_x <= b_x + self.POS_OFFSET:
-                # enemy above
-                if b_y > e_y:
-                    if DirectionAngle.UP - self.ANGLE_OFFSET <= b_angle<= DirectionAngle.UP + self.ANGLE_OFFSET:
-                        return True
-                # enemy below
-                if b_y < e_y:
-                    if DirectionAngle.DOWN - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.DOWN + self.ANGLE_OFFSET:
-                        return True
-            elif b_y - self.POS_OFFSET <= e_y <= b_y + self.POS_OFFSET:
-                # enemy on a left
-                if b_x > e_x:
-                    if DirectionAngle.LEFT - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.LEFT + self.ANGLE_OFFSET:
-                        return True
-                # enemy on a right
-                if b_x < e_x:
-                    if DirectionAngle.RIGHT - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.RIGHT + self.ANGLE_OFFSET:
-                        return True
+        if self.enemy.is_alive():
+            e_x, e_y = self.enemy.position
+            b_x, b_y = self.player.position
+            b_angle = self.player.angle
+            width = self.game.assets.width
+            height = self.game.assets.height
+            tile_size = (width + height) / 2
+            if length - 1 < self.diagonal_distance() / tile_size:
+                if b_x - self.POS_OFFSET <= e_x <= b_x + self.POS_OFFSET:
+                    # enemy above
+                    if b_y > e_y:
+                        if DirectionAngle.UP - self.ANGLE_OFFSET <= b_angle<= DirectionAngle.UP + self.ANGLE_OFFSET:
+                            return True
+                    # enemy below
+                    if b_y < e_y:
+                        if DirectionAngle.DOWN - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.DOWN + self.ANGLE_OFFSET:
+                            return True
+                elif b_y - self.POS_OFFSET <= e_y <= b_y + self.POS_OFFSET:
+                    # enemy on a left
+                    if b_x > e_x:
+                        if DirectionAngle.LEFT - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.LEFT + self.ANGLE_OFFSET:
+                            return True
+                    # enemy on a right
+                    if b_x < e_x:
+                        if DirectionAngle.RIGHT - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.RIGHT + self.ANGLE_OFFSET:
+                            return True
         return False
 
     @staticmethod
     def whole_angle(angle):
-        if -45 < angle < 45:
-            return 0
-        elif 45 < angle < 135:
+        """
+        Check which angle from {0, 90, 180, 270} is closest to the given one
+        :param float angle:
+        :return: angle from a range of {0, 90, 180, 270}
+        :rtype: float
+        """
+        if 45 < angle <= 135:
             return 90
-        elif 135 < angle < 225:
+        elif 135 < angle <= 225:
             return 180
-        else:
+        elif 225 < angle <= 315:
             return 270
+        else:
+            return 0
 
     def on(self, time):
         if self.player.is_alive():
@@ -199,13 +209,21 @@ class BotController:
             angle = self.player.angle - rotate
             width = self.game.assets.width
             height = self.game.assets.height
+
+            if self.player.angle > 180 and rotate == DirectionAngle.RIGHT:
+                angle = angle - 360
+            elif self.player.angle <= 0 and rotate == DirectionAngle.DOWN:
+                angle = (360 + angle)
+
             if angle != 0 and (-1 < self.player.angle < 1 and self.x * width > self.player.position[0] - width / 2
                                or 179 < self.player.angle < 181 and self.player.position[0] > (
                                        self.x + 1) * width - width / 2
                                or 269 < self.player.angle < 271 and self.y * height >= self.player.position[
                                    1] - height / 2
                                or 89 < self.player.angle < 91 and self.player.position[1] > (
-                                       self.y + 1) * height - height / 2):
+                                       self.y + 1) * height - height / 2)\
+                               or 359 < self.player.angle < 361 and self.player.position[0] > (
+                                       self.x + 1) * width - width / 2:
                 angle = 0
 
             if shot:

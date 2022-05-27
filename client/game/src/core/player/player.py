@@ -94,6 +94,10 @@ class Player:
             self.tank.rotate(self.angle)
         else:
             self.angle += angle
+            if self.angle >= 360:
+                self.angle = self.angle - 360
+            if self.angle < 0:
+                self.angle = 360 + self.angle
             self.game.refresh_players()
         # TODO: Emit information to the server
         pass
