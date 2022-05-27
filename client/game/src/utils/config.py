@@ -9,9 +9,9 @@ class Config:
         },
         'tank': {
             'scale': 0.7,
-            'magazine': 5,
-            'reload_bullet': 3,
-            'reload_magazine': 10
+            'magazine': 8,
+            'reload_bullet': 1,
+            'reload_magazine': 5
         },
         'lives': 3
     }
@@ -21,7 +21,7 @@ class Config:
     }
 
     bullet = {
-        'speed': 180,
+        'speed': 300,
         'scale': 0.09
     }
 

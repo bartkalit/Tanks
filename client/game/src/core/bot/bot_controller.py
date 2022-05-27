@@ -39,8 +39,8 @@ class DirectionAngle(float, Enum):
 
 class BotController:
     SHOT_DISTANCE = 30
-    ANGLE_OFFSET = 1
-    POS_OFFSET = 10
+    ANGLE_OFFSET = 30
+    POS_OFFSET = 40
 
     def __init__(self, screen, game, player):
         self.screen = screen
@@ -199,7 +199,7 @@ class BotController:
                 if b_x - self.POS_OFFSET <= e_x <= b_x + self.POS_OFFSET:
                     # enemy above
                     if b_y > e_y:
-                        if DirectionAngle.UP - self.ANGLE_OFFSET <= b_angle<= DirectionAngle.UP + self.ANGLE_OFFSET:
+                        if DirectionAngle.UP - self.ANGLE_OFFSET <= b_angle <= DirectionAngle.UP + self.ANGLE_OFFSET:
                             return True
                     # enemy below
                     if b_y < e_y:
