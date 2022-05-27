@@ -1,7 +1,7 @@
 import sys
 from enum import Enum
 from heapq import *
-from math import cos, sin, pi
+from math import cos, sin, pi, sqrt
 import pygame
 import copy
 
@@ -140,6 +140,11 @@ class BotController:
                     return length, ExpectRotate.LEFT
         return 0, self.player.angle  # stay
 
+    def diagonal_distance(self):
+        e_x, e_y = self.enemy.position
+        b_x, b_y = self.player.position
+        return sqrt(pow(b_x - e_x, 2) + pow(b_y - e_y, 2))
+
     def shot_condition(self, length):
         """
         Checks if enemy is in a straight line with a bot and if bot faces the enemy
@@ -150,7 +155,11 @@ class BotController:
         e_x, e_y = self.enemy.position
         b_x, b_y = self.player.position
         b_angle = self.player.angle
-        if length < self.SHOT_DISTANCE:
+        width = self.game.assets.width
+        height = self.game.assets.height
+        tile_size = (width + height) / 2
+        print(f"{length} {self.diagonal_distance() / width}")
+        if length - 1 < self.diagonal_distance() / tile_size:
             if b_x - self.POS_OFFSET <= e_x <= b_x + self.POS_OFFSET:
                 # enemy above
                 if b_y > e_y:
@@ -203,11 +212,9 @@ class BotController:
                 self.shot()
             if angle > 1:
                 self.rotate(Rotate.RIGHT, 2 * time)
-
             elif angle < -1:
                 self.rotate(Rotate.LEFT, 2 * time)
             else:
-
                 self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
                 if self.glitch_time < 0:
                     self.drive(Drive.BACKWARD, time)
