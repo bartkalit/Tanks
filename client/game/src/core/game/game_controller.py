@@ -17,6 +17,7 @@ class GameController:
         self.game.refresh_map()
         self.current_player = None
         self.bot = None
+        self.bot2 = None
 
     def join(self):
         players = self.game.players
@@ -24,12 +25,18 @@ class GameController:
         if self.current_player is None:
             player.change_current()
             self.current_player = PlayerController(player, self.screen)
+            # self.current_player = BotController(self.screen, self.game, player)
+            # self.bot2 = self.current_player
         else:
             self.bot = BotController(self.screen, self.game, player)
 
         self.game.add_player(player)
 
     def start(self):
+        if self.bot:
+            self.bot.set_enemy()
+        if self.bot2:
+            self.bot2.set_enemy()
         self.game.refresh_map()
         self.loop()
 

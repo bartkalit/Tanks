@@ -1,7 +1,7 @@
 import sys
 from enum import Enum
 from heapq import *
-from math import cos, sin, pi, sqrt
+from math import cos, sin, pi, sqrt, tan
 import random
 
 import numpy as np
@@ -41,6 +41,9 @@ class BotController:
     SHOT_DISTANCE = 30
     ANGLE_OFFSET = 30
     POS_OFFSET = 40
+    DETECTION_OFFSET = 50
+    FLEE_ANGLE = 90
+
 
     def __init__(self, screen, game, player):
         self.screen = screen
@@ -51,10 +54,13 @@ class BotController:
         self.x = 0
         self.y = 0
         self.glitch_time = 0
-        self.enemy = self.find_closest_player()
+        self.enemy = None
 
     def distance(self, player):
         return abs(self.player.position[0] - player.position[0]) + abs(self.player.position[1] - player.position[1])
+
+    def set_enemy(self):
+        self.enemy = self.find_closest_player()
 
     def find_closest_player(self):
         minDistance = sys.maxsize
@@ -145,7 +151,7 @@ class BotController:
 
     def diagonal_distance(self):
         """
-        :return: diagonal distance between bot and an enemy
+        :return: diagonal distance between bot and an enemy.
         :rtype: float
         """
         e_x, e_y = self.enemy.position
@@ -183,9 +189,9 @@ class BotController:
 
     def shot_condition(self, length):
         """
-        Checks if enemy is in a straight line with a bot and if bot faces the enemy
-        :param int length: Length of a shortest path between bot and an enemy in a number of tiles
-        :return: If bot is supposed to shot
+        Checks if enemy is in a straight line with a bot and if bot faces the enemy.
+        :param int length: Length of a shortest path between bot and an enemy in a number of tiles.
+        :return: If bot is supposed to shot.
         :rtype: bool
         """
         if self.enemy.is_alive():
@@ -219,9 +225,9 @@ class BotController:
     @staticmethod
     def whole_angle(angle):
         """
-        Check which angle from {0, 90, 180, 270} is closest to the given one
+        Check which angle from {0, 90, 180, 270} is closest to the given one.
         :param float angle:
-        :return: angle from a range of {0, 90, 180, 270}
+        :return: angle from a range of {0, 90, 180, 270}.
         :rtype: float
         """
         if 45 < angle <= 135:
@@ -233,10 +239,83 @@ class BotController:
         else:
             return 0
 
+    def on_trajectory(self, bullet):
+        """
+        Checks if bot is on the bullet whole trajectory, including the one behind it.
+        :param bullet: Bullet Object
+        :return: If bot is on the bullet trajectory. If yes also bullet angle.
+        :rtype: bool, float
+        """
+
+        width = self.DETECTION_OFFSET
+        bullet_x, bullet_y = bullet.position
+        bot_x, bot_y = self.player.position
+
+        # line between bullet and bot (y = ax - b)
+        bb_a = (bot_y - bullet_y) / (bot_x - bullet_x)
+        bb_b = bullet_y - bb_a * bullet_x
+        # line that goes through the bot position and is perpendicular to the above one
+        bot_a = - 1 / bb_a if bb_a else -1 / pow(10, -20)
+        bot_b = bot_y - bot_a * bot_x
+        # two points on the edges of the tank that are 40 units apart
+        p1_x = (bot_b - bb_b - width) / (bb_a - bot_a)
+        p1_y = bot_a * p1_x + bot_b
+
+        p2_x = (bot_b - bb_b + width) / (bb_a - bot_a)
+        p2_y = bot_a * p2_x + bot_b
+        # line that goes through bullet pos and is under bullet.angle
+        bullet_a = tan(-bullet.angle * pi / 180)
+        bullet_b = bullet_y - bullet_a * bullet_x
+
+        # print(f"bb      :   y = {bb_a}x + {bb_b}")
+        # print(f"bot     :   y = {bot_a}x + {bot_b}")
+        # print(f"bullet  :   y = {bullet_a}x + {bullet_b}")
+        # print(f"point1  :   ({p1_x}, {p1_y})")
+        # print(f"point2  :   ({p2_x}, {p2_y})")
+        # print(f"bullet_p:   ({bullet_x}, {bullet_y}) angle {bullet.angle}")
+        # print(f"tank_p  :   ({bot_x}, {bot_y})")
+
+        # # cross point between bb and bot lines
+        pb_x = (bot_b - bullet_b) / (bullet_a - bot_a)
+        pb_y = bot_a * pb_x + bot_b
+
+        if p1_x > p2_x:
+            p1_x, p2_x = p2_x, p1_x
+        if p1_y > p2_y:
+            p1_y, p2_y = p2_y, p1_y
+        if p1_x <= pb_x <= p2_x and p1_y <= pb_y <= p2_y:
+            return True, bullet.angle
+        return False, None
+
+    def at_gunpoint(self):
+        """
+        Check if bot might get hit by any bullet on a map except his.
+        :return: If bot might get hit if not moved. If yes also bullet angle.
+        :rtype: bool, float
+        """
+        for bullet in self.game.bullet_controller.bullets:
+            if bullet.player is not self.player:
+                bullet_x, bullet_y = bullet.position
+                bot_x, bot_y = self.player.position
+                if bullet_x < bot_x and 90 <= bullet.angle <= 270:
+                    continue
+                elif bullet_x > bot_x and (0 <= bullet.angle <= 90 and 270 <= bullet.angle <= 360):
+                    continue
+                elif bullet_y < bot_y and 0 <= bullet.angle <= 180:
+                    continue
+                elif bullet_y > bot_y and 180 <= bullet.angle <= 360:
+                    continue
+                else:
+                    endangered, angle = self.on_trajectory(bullet)
+                    if endangered:
+                        return endangered, angle
+        return False, None
+
     def on(self, time):
         if self.player.is_alive():
             self._reload(time)
             length, rotate = self.move()
+            flee, bullet_angle = self.at_gunpoint()
             shot = self.shot_condition(length)
             angle = self.player.angle - rotate
             width = self.game.assets.width
@@ -260,7 +339,14 @@ class BotController:
 
             if shot:
                 self.shot()
-            if angle > 1:
+            if flee:
+                rev_b_angle = (bullet_angle + 180) % 360
+                print(f"ucieka p{self.player.angle} r{rev_b_angle} b{bullet_angle}")
+                if rev_b_angle - self.FLEE_ANGLE <= self.player.angle <= rev_b_angle + self.FLEE_ANGLE:
+                    self.rotate(Rotate.LEFT, 3 * time)
+                else:
+                    self.drive(Drive.FORWARD, 2 * time)
+            elif angle > 1:
                 self.rotate(Rotate.RIGHT, 2 * time)
             elif angle < -1:
                 self.rotate(Rotate.LEFT, 2 * time)
