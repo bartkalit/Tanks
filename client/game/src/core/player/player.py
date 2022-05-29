@@ -22,6 +22,7 @@ class Player:
         self.position = position
         self.angle = 0
         self.points = 0
+        self.longest_side = None
         self.lives = Config.player['lives']
         self.bullets = Config.player['tank']['magazine']
         self.reload = 0
@@ -38,8 +39,10 @@ class Player:
 
     def create_tank(self):
         tank = pygame.image.load('assets/textures/tank' + str(self.id) + '.png')
-
         self.position = self.map.get_spawn_point
+        (x, y) = self.position
+        temp_pos = (x+ self.game.assets.width/2,  y + self.game.assets.width/2)
+        self.position = temp_pos
         self.tank = TankSprite(self.position, pygame.transform.scale(tank, self.get_tank_size()))
         self.rotate(self.init_angle())
         self.game.refresh_players()
@@ -85,12 +88,16 @@ class Player:
         # TODO: Emit information to the server
         pass
 
-    def rotate(self, angle):
+    def rotate(self, angle, bot = 0):
         self.tank.rotate(self.angle + angle)
-        if self._collide():
+        if self._collide() and not bot:
             self.tank.rotate(self.angle)
         else:
             self.angle += angle
+            if self.angle >= 360:
+                self.angle = self.angle - 360
+            if self.angle < 0:
+                self.angle = 360 + self.angle
             self.game.refresh_players()
         # TODO: Emit information to the server
         pass

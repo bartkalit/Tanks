@@ -2,18 +2,18 @@ class Config:
     player = {
         'speed': {
             'drive': {
-                'forward': 120,
-                'backward': 70
+                'forward': 40,
+                'backward': 100
             },
             'rotate': 80
         },
         'tank': {
             'scale': 0.7,
-            'magazine': 5,
-            'reload_bullet': 3,
-            'reload_magazine': 10
+            'magazine': 8,
+            'reload_bullet': 2,
+            'reload_magazine': 1
         },
-        'lives': 3
+        'lives': 20
     }
 
     game = {
@@ -21,7 +21,7 @@ class Config:
     }
 
     bullet = {
-        'speed': 40,
+        'speed': 80,
         'scale': 0.09
     }
 

@@ -10,6 +10,7 @@ class Map:
         self.walls = pygame.sprite.Group()
         self.ground = pygame.sprite.Group()
         self.spawn_points = []
+        self.map = []
 
     def add_wall(self, wall):
         self.walls.add(wall)
