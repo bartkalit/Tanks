@@ -40,12 +40,13 @@ class DirectionAngle(float, Enum):
 class BotController:
     SHOT_DISTANCE = 30
     ANGLE_OFFSET = 30
-    POS_OFFSET = 50
-    DETECTION_OFFSET = 40
+    POS_OFFSET = 40
+    DETECTION_OFFSET = 60
     FLEE_ANGLE = 90
 
 
-    def __init__(self, screen, game, player):
+    def __init__(self, screen, game, player, id):
+        self.id = id
         self.screen = screen
         self.game = game
         self.player = player
@@ -54,6 +55,7 @@ class BotController:
         self.x = 0
         self.y = 0
         self.glitch_time = 0
+        self.flee_timer = 0
         self.enemy = None
 
     def distance(self, player):
@@ -318,33 +320,40 @@ class BotController:
             if shot:
                 self.shot()
             if flee:
+                self.flee_timer = 15
                 rev_b_angle = (bullet_angle + 180) % 360
+                print("flee ", self.id, " ", rev_b_angle)
                 if rev_b_angle - self.FLEE_ANGLE <= self.player.angle <= rev_b_angle + self.FLEE_ANGLE:
-                    self.rotate(Rotate.LEFT, 3 * time)
-                else:
-                    self.drive(Drive.FORWARD, 2 * time)
-
-            elif angle > 1:
-                self.rotate(Rotate.RIGHT, 2 * time)
-            elif angle < -1:
-                self.rotate(Rotate.LEFT, 2 * time)
-            else:
-                move_value = 0
-                self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
-                if self.glitch_time < 0:
+                    self.rotate(Rotate.LEFT, 4 * time)
                     self.drive(Drive.BACKWARD, time)
-                    move_value = 1
                 else:
-                    b_x, b_y = self.player.position
-                    e_x, e_y = self.enemy.position
-                    if not(b_x == e_x and length < 3) or not(b_y == e_y and length < 3):
+                    self.rotate(Rotate.RIGHT, time)
+                    self.drive(Drive.BACKWARD, time)
+            elif angle > 1:
+                self.rotate(Rotate.RIGHT, time)
+            elif angle < -1:
+                self.rotate(Rotate.LEFT, time)
+            else:
+                if self.flee_timer <= 0:
+                    move_value = 0
+                    self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
+                    if self.glitch_time < 0:
+                        self.drive(Drive.BACKWARD, time)
+                        move_value = 1
+                    else:
+                        b_x, b_y = self.player.position
+                        e_x, e_y = self.enemy.position
+                        # if not(b_x == e_x and length < 3) or not(b_y == e_y and length < 3):
                         move_value = self.drive(Drive.FORWARD, time)
-                    # move_value = self.drive(Drive.FORWARD, time)
-                self.glitch_time += move_value
-                if self.glitch_time == 100:
-                    self.glitch_time = -50
-                elif move_value == 0:
-                    self.glitch_time = 0
+                        # move_value = self.drive(Drive.FORWARD, time)
+                    self.glitch_time += move_value
+                    if self.glitch_time == 100:
+                        self.glitch_time = -50
+                    elif move_value == 0:
+                        self.glitch_time = 0
+                else:
+                    self.drive(Drive.BACKWARD, time / 2)
+                    self.flee_timer -= 1
 
     def _reload(self, time):
         self.player.reload_time -= time

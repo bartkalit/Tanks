@@ -24,11 +24,11 @@ class GameController:
         player = Player(self.game, len(players) + 1)
         if self.current_player is None:
             player.change_current()
-            self.current_player = PlayerController(player, self.screen)
-            self.current_player = BotController(self.screen, self.game, player)
+            # self.current_player = PlayerController(player, self.screen, 0)
+            self.current_player = BotController(self.screen, self.game, player, 0)
             self.bot2 = self.current_player
         else:
-            self.bot = BotController(self.screen, self.game, player)
+            self.bot = BotController(self.screen, self.game, player, 1)
 
         self.game.add_player(player)
 
