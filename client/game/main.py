@@ -2,18 +2,20 @@ import multiprocessing as mp
 from client.game.src.core.screen import Screen
 import os
 
-os.environ["SDL_VIDEODRIVER"] = "dummy"
 statistic = {'0': 0, '1': 0}
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
 def simulation():
     screen = Screen()
-    return screen.new_game()
+    result = screen.new_game()
+    del screen
+    return result
 
 
-def info(num_of_sim, iter):
+def info(num_of_sim, iteration):
     bar_size = 10
-    progress = int((iter / num_of_sim) * bar_size) + 1
+    progress = int((iteration / num_of_sim) * bar_size) + 1
     result = "["
     for _ in range(progress):
         result += "*"
