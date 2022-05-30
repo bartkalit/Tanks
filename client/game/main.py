@@ -47,3 +47,6 @@ if __name__ == "__main__":
                 statistic[str(winner)] += 1
                 done += 1
                 info(num_of_simulations, done)
+
+# screen = Screen()
+# screen.new_game()
