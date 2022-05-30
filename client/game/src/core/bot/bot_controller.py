@@ -160,32 +160,61 @@ class BotController:
         b_x, b_y = self.player.position
         return sqrt(pow(b_x - e_x, 2) + pow(b_y - e_y, 2))
 
+    def checkMove(self, directory, pos):
+        # for i in range(len(self.map)):
+        #   print(self.map[i])
+
+        if directory == DirectionAngle.DOWN and self.map[pos[1] + 1][pos[0]] != "#":
+            return True
+        elif directory == DirectionAngle.UP and self.map[pos[1] - 1][pos[0]] != "#":
+            return True
+        elif directory == DirectionAngle.RIGHT and self.map[pos[1]][pos[0] + 1] != "#":
+            return True
+        elif directory == DirectionAngle.LEFT and self.map[pos[1]][pos[0] - 1] != "#":
+            return True
+
+        return False
+
+    @property
     def move2(self):
         moves = []
-        actual_point = ""
+        self.actual_pos = ""
         if self.enemy.is_alive():
-            actual_point, new_point, length = self.find_path()
-            if actual_point:
-                if not (actual_point[1] < new_point[1]) and self.map[actual_point[0]][actual_point[1] - 1] != "#":
-                   moves.append([length, DirectionAngle.DOWN])
-                if not (actual_point[1] > new_point[1]) and self.map[actual_point[0]][actual_point[1] + 1] != "#":
-                    print(self.map[actual_point[0]][actual_point[1] - 1])
-                    moves.append([length, DirectionAngle.UP])
-                if not (actual_point[0] < new_point[0]) and self.map[actual_point[0] - 1][actual_point[1]] != "#":
-                    moves.append([length, DirectionAngle.RIGHT])
-                if not (actual_point[0] > new_point[0]) and self.map[actual_point[0] + 1][actual_point[1]] != "#":
-                    moves.append([length, DirectionAngle.LEFT])
-        print(actual_point, new_point, moves)
+            self.actual_pos, new_point, length = self.find_path()
+            if self.actual_pos:
+                moves = [DirectionAngle.DOWN, DirectionAngle.UP, DirectionAngle.RIGHT, DirectionAngle.LEFT]
+                opponent_possition = None
+                if (self.actual_pos[1] < new_point[1]):
+                    opponent_possition = DirectionAngle.DOWN
+                elif (self.actual_pos[1] > new_point[1]):
+                    opponent_possition = DirectionAngle.UP
+                elif (self.actual_pos[0] < new_point[0]):
+                    opponent_possition = DirectionAngle.RIGHT
+                elif (self.actual_pos[0] > new_point[0]):
+                    opponent_possition = DirectionAngle.LEFT
+
+                print("oppo:", opponent_possition)
+                moves.remove(opponent_possition)
+                for move in moves:
+                    if not self.checkMove(move, self.actual_pos):
+                        moves.remove(move)
+
+                if len(moves) == 0 and self.checkMove(opponent_possition, self.actual_pos):
+                    moves.append(opponent_possition)
+
         if len(moves):
-            for angle in list(zip(*moves))[1]:
-                if angle - 1 < self.player.angle < angle + 1:
-                    #print("1")
-                    return 0, self.player.angle  # stay
+            print(self.actual_pos, new_point, moves, self.player.angle, self.player.lastMove)
+            for angle in moves:
+                # if self.lastMove and ((angle - 1 < self.lastMove < angle + 1) or (angle == DirectionAngle.RIGHT and 359 < self.lastMove < 361)):  # stay
+                if self.player.lastMove != None and angle == self.player.lastMove and self.checkMove(self.player.lastMove, self.actual_pos):
+                    return length, self.player.lastMove
 
             r = random.randrange(0, len(moves), 1)
-            #print("2")
-            return moves[r][0], moves[r][1]
-        #print("3")
+            self.player.lastMove = moves[r]
+            print("a? ", moves[r])
+            return length, moves[r]
+        print("C")
+        self.player.lastMove = self.player.angle
         return 0, self.player.angle  # stay
 
     def shot_condition(self, length):
@@ -355,6 +384,77 @@ class BotController:
                     self.drive(Drive.BACKWARD, time / 2)
                     self.flee_timer -= 1
 
+    def on2(self, time):
+        if self.player.is_alive():
+            self._reload(time)
+            length, rotate = self.move2
+            shot = self.shot_condition(length)
+            angle = self.player.angle - rotate
+            width = self.game.assets.width
+            height = self.game.assets.height
+
+            if self.player.angle > 180 and rotate == DirectionAngle.RIGHT:
+                angle = angle - 360
+            elif self.player.angle <= 0 and rotate == DirectionAngle.DOWN:
+                angle = (360 + angle)
+
+            """ if angle != 0 and (-1 < self.player.angle < 1 and self.x * width > self.player.position[0] - width / 2 and self.map[self.actual_pos[0] + 1][self.actual_pos[1]] != "#" #RIGHT
+                               or 179 < self.player.angle < 181 and self.player.position[0] > (self.x + 1) * width - width / 2 and self.map[self.actual_pos[0] - 1][self.actual_pos[1]] != "#" #LEFT
+                               or 269 < self.player.angle < 271 and self.y * height >= self.player.position[1] - height / 2 and self.map[self.actual_pos[0]][self.actual_pos[1] + 1] != "#" #DOWN
+                               or 89 < self.player.angle < 91 and self.player.position[1] > (self.y + 1) * height - height / 2 and self.map[self.actual_pos[0]][self.actual_pos[1] - 1] != "#" #UP
+                               or 359 < self.player.angle < 361 and self.player.position[0] > (self.x + 1) * width - width / 2) and self.map[self.actual_pos[0] + 1][self.actual_pos[1]] != "#": #RIGHT
+            """
+
+            """if angle != 0 and (-1 < self.player.angle < 1 and self.x * width > self.player.position[0] -
+                               self.player.get_tank_size()[0]
+                               or 179 < self.player.angle < 181 and self.player.position[0] > (
+                                       self.x + 1) * width - width / 2 + 6
+                               or 269 < self.player.angle < 271 and self.y * height >= self.player.position[
+                                   1] - height / 2 + 7
+                               or 89 < self.player.angle < 91 and self.player.position[1] > (
+                                       self.y + 1) * height - height / 2 + 6
+                               or 359 < self.player.angle < 361 and self.player.position[0] > (
+                                       self.x + 1) * width - self.player.get_tank_size()[0]):
+                                                angle = 0       """
+
+            if angle != 0 and (-1 < self.player.angle < 1 and self.x * width > self.player.position[0] - width / 2
+                               or 179 < self.player.angle < 181 and self.player.position[0] > (
+                                       self.x + 1) * width - width / 2 + 6
+                               or 269 < self.player.angle < 271 and self.y * height >= self.player.position[
+                                   1] - height / 2 + 7
+                               or 89 < self.player.angle < 91 and self.player.position[1] > (
+                                       self.y + 1) * height - height / 2
+                    or 359 < self.player.angle < 361 and self.player.position[0] > (
+                    self.x + 1) * width - width / 2 + 6):
+
+                print("b")
+                angle = 0
+
+            if shot:
+                self.shot()
+            if angle > 1:
+                self.rotate(Rotate.RIGHT, 2*time)
+            elif angle < -1:
+                self.rotate(Rotate.LEFT, 2*time)
+            else:
+                if angle > 0.05:
+                    self.rotate(Rotate.RIGHT, time/5)
+                elif angle < -0.05:
+                    self.rotate(Rotate.LEFT, time/5)
+
+                if self.glitch_time < 0:
+                    self.drive(Drive.BACKWARD, time)
+                    move_value = 1
+                    self.player.lastMove = None
+                else:
+                    move_value = self.drive(Drive.FORWARD, time)
+
+                self.glitch_time += move_value
+                if self.glitch_time == 100:
+                    self.glitch_time = -50
+                elif move_value == 0:
+                    self.glitch_time = 0
+
     def _reload(self, time):
         self.player.reload_time -= time
         StatBar.show_reload(self.screen, self.player)
@@ -410,3 +510,4 @@ class BotController:
             if self.player.bullets == 0:
                 self._reload_magazine()
             # TODO: Send bullet position to the server
+

@@ -31,6 +31,7 @@ class Player:
         self._kill_count = 0
         self.reload_time = 0
         self.is_current = False
+        self.lastMove = None
         self.create_tank()
         self.points = 0
 
@@ -98,6 +99,10 @@ class Player:
                 self.angle = self.angle - 360
             if self.angle < 0:
                 self.angle = 360 + self.angle
+
+            #if self.lastMove != None and self.lastMove - 1 < self.angle < self.lastMove + 1:
+             #   self.angle = self.lastMove
+
             self.game.refresh_players()
         # TODO: Emit information to the server
         pass
