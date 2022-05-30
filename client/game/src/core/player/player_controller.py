@@ -52,7 +52,8 @@ class PlayerController:
         self.player.reload_time -= time
         StatBar.show_reload(self.screen, self.player)
         if self.player.reload_time <= 0:
-            StatBar.show_magazine(self.screen, self.player)
+            if self.player.is_current:
+                StatBar.show_magazine(self.screen, self.player)
 
     def _reload_magazine(self):
         if self.player.bullets != Config.player['tank']['magazine']:
@@ -94,7 +95,8 @@ class PlayerController:
         if self.player.reload_time <= 0:
             self.player.reload_time = Config.player['tank']['reload_bullet']
             self.player.shot()
-            StatBar.show_magazine(self.screen, self.player)
+            if self.player.is_current:
+                StatBar.show_magazine(self.screen, self.player)
             if self.player.bullets == 0:
                 self._reload_magazine()
             # TODO: Send bullet position to the server

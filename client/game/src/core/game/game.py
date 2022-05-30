@@ -8,7 +8,7 @@ from client.game.src.utils.assets import Assets
 class Game:
     def __init__(self, screen):
         self.screen = screen
-        self.map = self._load_map('kyiv')
+        self.map = self._load_map('arena')
         self.players = []
         self.assets = Assets(screen, self.map)
         self.bullet_controller = BulletController(self)

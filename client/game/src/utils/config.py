@@ -1,27 +1,27 @@
 class Config:
     player = {
-        'speed': {
+        'speed': {                      # normal | simulation
             'drive': {
-                'forward': 70,
-                'backward': 90
+                'forward': 560,         # 70     | 560
+                'backward': 720         # 90     | 720
             },
-            'rotate': 90
+            'rotate': 1200              # 150    | 1200
         },
         'tank': {
             'scale': 0.7,
             'magazine': 8,
-            'reload_bullet': 1,
-            'reload_magazine': 3
+            'reload_bullet': 2,
+            'reload_magazine': 4
         },
-        'lives': 5
+        'lives': 3
     }
 
     game = {
-        'fps': 60
+        'fps': 200
     }
 
     bullet = {
-        'speed': 110,
+        'speed': 880,                   # 120    | 880
         'scale': 0.09
     }
 

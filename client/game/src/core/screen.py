@@ -15,12 +15,15 @@ class Screen(object):
             pygame.init()
             cls.instance = super(Screen, cls).__new__(cls)
             cls.instance.resolution = (Config.screen['resolution']['width'], Config.screen['resolution']['height'] + Config.screen['stat_bar'])
-            cls.instance._set_window()
-            cls.instance.game = GameController(cls.instance.screen)
-            cls.instance.game.join()
-            cls.instance.game.join()
-            cls.instance.game.start()
         return cls.instance
+
+    def new_game(self):
+        # self.resolution = (Config.screen['resolution']['width'], Config.screen['resolution']['height'] + Config.screen['stat_bar'])
+        self._set_window()
+        self.game = GameController(self.screen)
+        self.game.join()
+        self.game.join()
+        return self.game.start()
 
     def _set_window(self):
         self.screen = pygame.display.set_mode(self.resolution)

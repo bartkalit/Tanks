@@ -39,12 +39,13 @@ class DirectionAngle(float, Enum):
 
 class BotController:
     SHOT_DISTANCE = 30
-    ANGLE_OFFSET = 40
-    POS_OFFSET = 30
+    ANGLE_OFFSET = 10
+    POS_OFFSET = 20
+    COLISION_OFFSET = 10
     DETECTION_OFFSET = 30
     FLEE_ANGLE = 70
     DISTANCE_OFFSET = 15
-    ANGLE_SENSITIVITY = 3
+    ANGLE_SENSITIVITY = 30
 
 
     def __init__(self, screen, game, player, id):
@@ -58,6 +59,7 @@ class BotController:
         self.y = 0
         self.glitch_time = 0
         self.flee_timer = 0
+        self.flee_dir = 0
         self.last_bullet_angle = 0
         self.enemy = None
 
@@ -344,24 +346,31 @@ class BotController:
                     self.shot()
 
                 move_value = 0
-                if flee:
+                if flee and self.id:
                     self.last_bullet_angle = bullet_angle
                     self.flee_timer = 20
                     rev_b_angle = (bullet_angle + 180) % 360
                     if rev_b_angle - self.FLEE_ANGLE <= self.player.angle <= rev_b_angle + self.FLEE_ANGLE:
-                        self.rotate(Rotate.LEFT, 3 * time)
+                        if self.flee_dir:
+                            self.rotate(Rotate.LEFT, 3 * time)
+                        else:
+                            self.rotate(Rotate.RIGHT, 3 * time)
                         self.drive(Drive.BACKWARD, time)
                     else:
                         self.drive(Drive.BACKWARD, time)
                 elif self.glitch_time < 0:
-                        self.drive(Drive.BACKWARD, time)
-                        # self.rotate(Rotate.LEFT, time)
-                        move_value = 1
+                    self.drive(Drive.BACKWARD, time)
+                    if self.flee_dir:
+                        self.rotate(Rotate.LEFT, time / 2)
+                    else:
+                        self.rotate(Rotate.LEFT, time / 2)
+                    move_value = 1
                 elif angle > 1:
                     self.rotate(Rotate.RIGHT, time)
                 elif angle < -1:
                     self.rotate(Rotate.LEFT, time)
                 else:
+                    self.flee_dir = 0 if self.flee_dir else 1
                     self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
                     b_x, b_y = self.player.position
                     e_x, e_y = self.enemy.position
@@ -370,7 +379,8 @@ class BotController:
                     ang_offset = self.ANGLE_SENSITIVITY
                     # bot and enemy facing each other and on the +/- same x position
                     if re_angle - ang_offset <= self.player.angle <= re_angle + ang_offset and \
-                            e_x - dist_offset <= b_x <= e_x + dist_offset:
+                            e_x - dist_offset <= b_x <= e_x + dist_offset and \
+                            e_y - self.COLISION_OFFSET <= b_y <= e_y + self.COLISION_OFFSET:
                         if length <= 3 and \
                                 (90 - ang_offset <= re_angle <= 90 + ang_offset or \
                                 270 - ang_offset <= re_angle <= 270 + ang_offset):
@@ -379,7 +389,8 @@ class BotController:
                             move_value = self.drive(Drive.FORWARD, time)
                     # bot and enemy facing each other and on the +/- same y position
                     elif re_angle - ang_offset <= self.player.angle <= re_angle + ang_offset and \
-                            e_y - dist_offset <= b_y <= e_y + dist_offset:
+                            e_y - dist_offset <= b_y <= e_y + dist_offset and \
+                            e_x - self.COLISION_OFFSET <= b_x <= e_x + self.COLISION_OFFSET:
                         if length <= 3 and \
                                 (0 <= re_angle <= ang_offset or 360 - ang_offset <= re_angle <= 360 or \
                                 180 - ang_offset <= re_angle <= 180 + ang_offset):
@@ -407,7 +418,8 @@ class BotController:
         self.player.reload_time -= time
         StatBar.show_reload(self.screen, self.player)
         if self.player.reload_time <= 0:
-            StatBar.show_magazine(self.screen, self.player)
+            if self.player.is_current:
+                StatBar.show_magazine(self.screen, self.player)
 
     def _reload_magazine(self):
         if self.player.bullets != Config.player['tank']['magazine']:
@@ -454,7 +466,8 @@ class BotController:
         if self.player.reload_time <= 0:
             self.player.reload_time = Config.player['tank']['reload_bullet']
             self.player.shot()
-            StatBar.show_magazine(self.screen, self.player)
+            if self.player.is_current:
+                StatBar.show_magazine(self.screen, self.player)
             if self.player.bullets == 0:
                 self._reload_magazine()
             # TODO: Send bullet position to the server
