@@ -17,9 +17,10 @@ class Rotate(Enum):
 
 
 class PlayerController:
-    def __init__(self, player, screen):
+    def __init__(self, player, screen, id):
         self.screen = screen
         self.player = player
+        self.id = id
         self.draw_ui()
 
     def draw_ui(self):

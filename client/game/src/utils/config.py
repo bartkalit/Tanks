@@ -5,15 +5,15 @@ class Config:
                 'forward': 70,
                 'backward': 90
             },
-            'rotate': 80
+            'rotate': 90
         },
         'tank': {
             'scale': 0.7,
             'magazine': 8,
             'reload_bullet': 1,
-            'reload_magazine': 1
+            'reload_magazine': 3
         },
-        'lives': 20
+        'lives': 5
     }
 
     game = {

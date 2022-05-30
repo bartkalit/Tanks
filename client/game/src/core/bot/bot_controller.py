@@ -1,7 +1,7 @@
 import sys
 from enum import Enum
 from heapq import *
-from math import cos, sin, pi, sqrt, tan
+from math import cos, sin, pi, sqrt, tan, nan
 import random
 
 import numpy as np
@@ -39,10 +39,12 @@ class DirectionAngle(float, Enum):
 
 class BotController:
     SHOT_DISTANCE = 30
-    ANGLE_OFFSET = 30
-    POS_OFFSET = 40
-    DETECTION_OFFSET = 60
-    FLEE_ANGLE = 90
+    ANGLE_OFFSET = 40
+    POS_OFFSET = 30
+    DETECTION_OFFSET = 30
+    FLEE_ANGLE = 70
+    DISTANCE_OFFSET = 15
+    ANGLE_SENSITIVITY = 3
 
 
     def __init__(self, screen, game, player, id):
@@ -56,6 +58,7 @@ class BotController:
         self.y = 0
         self.glitch_time = 0
         self.flee_timer = 0
+        self.last_bullet_angle = 0
         self.enemy = None
 
     def distance(self, player):
@@ -240,29 +243,42 @@ class BotController:
         else:
             return 0
 
-    def on_trajectory(self, object):
+    def on_trajectory(self, bullet):
         """
         Checks if bot is on the bullet whole trajectory, including the one behind it.
         :param bullet: Bullet Object
         :return: If bot is on the bullet trajectory. If yes also bullet angle.
         :rtype: bool, float
         """
-        width, height = self.player.get_tank_size()
-        bullet_x, bullet_y = object.position
+        bullet_x, bullet_y = bullet.position
         bot_x, bot_y = self.player.position
+        offset = 2
+        if 90 - offset <= bullet.angle <= 90 + offset:
+            hit_x = bullet_x
+            hit_y = bot_y
+        elif 0 <= bullet.angle <= offset or 360 - offset <= bullet.angle <= 360:
+            hit_x = bot_x
+            hit_y = bullet_y
+        elif 270 - offset <= bullet.angle <= 270 + offset:
+            hit_x = bullet_x
+            hit_y = bot_y
+        elif 180 - offset <= bullet.angle <= 180 + offset:
+            hit_x = bot_x
+            hit_y = bullet_y
+        else:
+            bullet_a = tan(-bullet.angle * pi / 180)
+            bullet_b = bullet_y - (bullet_a * bullet_x)
 
-        bullet_a = tan(-object.angle * pi / 180)
-        bullet_b = bullet_y - (bullet_a * bullet_x)
+            bot_a = - 1 / bullet_a if bullet_a else - 1 / pow(10, -20)
+            bot_b = bot_y - (bot_a * bot_x)
 
-        bot_a = - 1 / bullet_a if bullet_a else float("-inf")
-        bot_b = bot_y - (bot_a * bot_x)
-
-        hit_x = (bot_b - bullet_b) / (bullet_a - bot_a) if bullet_a - bot_a else (bot_b - bullet_b) / (1 / float("inf"))
-        hit_y = (bullet_a * hit_x) + bullet_b
+            hit_x = (bot_b - bullet_b) / (bullet_a - bot_a) if bullet_a - bot_a else (bot_b - bullet_b) / pow(10, -20)
+            hit_y = (bullet_a * hit_x) + bullet_b
 
         dist = sqrt(pow(bot_x - hit_x, 2) + pow(bot_y - hit_y, 2))
+
         if dist < self.DETECTION_OFFSET:
-            return True, object.angle
+            return True, bullet.angle
         return False, None
         # return True, object.angle
 
@@ -273,19 +289,25 @@ class BotController:
         :rtype: bool, float
         """
         for bullet in self.game.bullet_controller.bullets:
-            if bullet.player is not self.player:
+            if bullet.player.id != self.player.id:
+
                 bullet_x, bullet_y = bullet.position
                 bot_x, bot_y = self.player.position
                 if bullet_x < bot_x - self.DETECTION_OFFSET and 90 <= bullet.angle <= 270:
+                    # print("x< ", self.id)
                     continue
                 elif bullet_x > bot_x + self.DETECTION_OFFSET and (
                         0 <= bullet.angle <= 90 and 270 <= bullet.angle <= 360):
+                    # print("x> ", self.id)
                     continue
                 elif bullet_y < bot_y - self.DETECTION_OFFSET and 0 <= bullet.angle <= 180:
+                    # print("y< ", self.id)
                     continue
                 elif bullet_y > bot_y + self.DETECTION_OFFSET and 180 <= bullet.angle <= 360:
+                    # print("y> ", self.id)
                     continue
                 else:
+                    # print("check")
                     endangered, angle = self.on_trajectory(bullet)
                     if endangered:
                         return endangered, angle
@@ -293,67 +315,93 @@ class BotController:
 
     def on(self, time):
         if self.player.is_alive():
-            self._reload(time)
-            length, rotate = self.move()
             flee, bullet_angle = self.at_gunpoint()
-            shot = self.shot_condition(length)
-            angle = self.player.angle - rotate
-            width = self.game.assets.width
-            height = self.game.assets.height
+            if self.flee_timer <= 0 or flee:
+                self._reload(time)
+                length, rotate = self.move()
+                shot = self.shot_condition(length)
+                angle = self.player.angle - rotate
+                width = self.game.assets.width
+                height = self.game.assets.height
 
-            if self.player.angle > 180 and rotate == DirectionAngle.RIGHT:
-                angle = angle - 360
-            elif self.player.angle <= 0 and rotate == DirectionAngle.DOWN:
-                angle = (360 + angle)
+                if self.player.angle > 180 and rotate == DirectionAngle.RIGHT:
+                    angle = angle - 360
+                elif self.player.angle <= 0 and rotate == DirectionAngle.DOWN:
+                    angle = (360 + angle)
 
-            if angle != 0 and (-1 < self.player.angle < 1 and self.x * width > self.player.position[0] - width / 2
-                               or 179 < self.player.angle < 181 and self.player.position[0] > (
-                                       self.x + 1) * width - width / 2
-                               or 269 < self.player.angle < 271 and self.y * height >= self.player.position[
-                                   1] - height / 2
-                               or 89 < self.player.angle < 91 and self.player.position[1] > (
-                                       self.y + 1) * height - height / 2)\
-                               or 359 < self.player.angle < 361 and self.player.position[0] > (
-                                       self.x + 1) * width - width / 2:
-                angle = 0
+                if angle != 0 and (-1 < self.player.angle < 1 and self.x * width > self.player.position[0] - width / 2
+                                   or 179 < self.player.angle < 181 and self.player.position[0] > (
+                                           self.x + 1) * width - width / 2
+                                   or 269 < self.player.angle < 271 and self.y * height >= self.player.position[
+                                       1] - height / 2
+                                   or 89 < self.player.angle < 91 and self.player.position[1] > (
+                                           self.y + 1) * height - height / 2)\
+                                   or 359 < self.player.angle < 361 and self.player.position[0] > (
+                                           self.x + 1) * width - width / 2:
+                    angle = 0
 
-            if shot:
-                self.shot()
-            if flee:
-                self.flee_timer = 15
-                rev_b_angle = (bullet_angle + 180) % 360
-                print("flee ", self.id, " ", rev_b_angle)
-                if rev_b_angle - self.FLEE_ANGLE <= self.player.angle <= rev_b_angle + self.FLEE_ANGLE:
-                    self.rotate(Rotate.LEFT, 4 * time)
-                    self.drive(Drive.BACKWARD, time)
-                else:
-                    self.rotate(Rotate.RIGHT, time)
-                    self.drive(Drive.BACKWARD, time)
-            elif angle > 1:
-                self.rotate(Rotate.RIGHT, time)
-            elif angle < -1:
-                self.rotate(Rotate.LEFT, time)
-            else:
-                if self.flee_timer <= 0:
-                    move_value = 0
-                    self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
-                    if self.glitch_time < 0:
+                if shot:
+                    self.shot()
+
+                move_value = 0
+                if flee:
+                    self.last_bullet_angle = bullet_angle
+                    self.flee_timer = 20
+                    rev_b_angle = (bullet_angle + 180) % 360
+                    if rev_b_angle - self.FLEE_ANGLE <= self.player.angle <= rev_b_angle + self.FLEE_ANGLE:
+                        self.rotate(Rotate.LEFT, 3 * time)
                         self.drive(Drive.BACKWARD, time)
-                        move_value = 1
                     else:
-                        b_x, b_y = self.player.position
-                        e_x, e_y = self.enemy.position
-                        # if not(b_x == e_x and length < 3) or not(b_y == e_y and length < 3):
-                        move_value = self.drive(Drive.FORWARD, time)
-                        # move_value = self.drive(Drive.FORWARD, time)
-                    self.glitch_time += move_value
-                    if self.glitch_time == 100:
-                        self.glitch_time = -50
-                    elif move_value == 0:
-                        self.glitch_time = 0
+                        self.drive(Drive.BACKWARD, time)
+                elif self.glitch_time < 0:
+                        self.drive(Drive.BACKWARD, time)
+                        # self.rotate(Rotate.LEFT, time)
+                        move_value = 1
+                elif angle > 1:
+                    self.rotate(Rotate.RIGHT, time)
+                elif angle < -1:
+                    self.rotate(Rotate.LEFT, time)
                 else:
-                    self.drive(Drive.BACKWARD, time / 2)
-                    self.flee_timer -= 1
+                    self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
+                    b_x, b_y = self.player.position
+                    e_x, e_y = self.enemy.position
+                    re_angle = (self.enemy.angle + 180) % 360
+                    dist_offset = self.DISTANCE_OFFSET
+                    ang_offset = self.ANGLE_SENSITIVITY
+                    # bot and enemy facing each other and on the +/- same x position
+                    if re_angle - ang_offset <= self.player.angle <= re_angle + ang_offset and \
+                            e_x - dist_offset <= b_x <= e_x + dist_offset:
+                        if length <= 3 and \
+                                (90 - ang_offset <= re_angle <= 90 + ang_offset or \
+                                270 - ang_offset <= re_angle <= 270 + ang_offset):
+                            move_value = -10
+                        else:
+                            move_value = self.drive(Drive.FORWARD, time)
+                    # bot and enemy facing each other and on the +/- same y position
+                    elif re_angle - ang_offset <= self.player.angle <= re_angle + ang_offset and \
+                            e_y - dist_offset <= b_y <= e_y + dist_offset:
+                        if length <= 3 and \
+                                (0 <= re_angle <= ang_offset or 360 - ang_offset <= re_angle <= 360 or \
+                                180 - ang_offset <= re_angle <= 180 + ang_offset):
+                            move_value = -10
+                        else:
+                            move_value = self.drive(Drive.FORWARD, time)
+                    # bot or enemy is turned to the other one in a 90 degree angle
+                    elif re_angle + 90 - ang_offset <= self.player.angle <= re_angle + 90 + ang_offset or \
+                          re_angle - 90 - ang_offset <= self.player.angle <= re_angle - 90 + ang_offset: \
+                        move_value = self.drive(Drive.FORWARD, time)
+                    elif length > 2:
+                        move_value = self.drive(Drive.FORWARD, time)
+                    else:
+                        move_value = -10 - random.randrange(10)
+                self.glitch_time += move_value
+                if self.glitch_time >= 100:
+                    self.glitch_time = -40 + random.randrange(10)
+                elif move_value == 0:
+                    self.glitch_time = 0
+            else:
+                shot = self.shot_condition(1)
+                self.flee_timer -= 1
 
     def _reload(self, time):
         self.player.reload_time -= time
