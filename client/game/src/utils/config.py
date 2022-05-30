@@ -2,7 +2,7 @@ class Config:
     player = {
         'speed': {
             'drive': {
-                'forward': 40,
+                'forward': 80,
                 'backward': 100
             },
             'rotate': 80
@@ -21,7 +21,7 @@ class Config:
     }
 
     bullet = {
-        'speed': 80,
+        'speed': 150,
         'scale': 0.09
     }
 

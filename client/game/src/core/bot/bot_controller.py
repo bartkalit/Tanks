@@ -40,8 +40,8 @@ class DirectionAngle(float, Enum):
 class BotController:
     SHOT_DISTANCE = 30
     ANGLE_OFFSET = 30
-    POS_OFFSET = 40
-    DETECTION_OFFSET = 50
+    POS_OFFSET = 50
+    DETECTION_OFFSET = 40
     FLEE_ANGLE = 90
 
 
@@ -186,7 +186,6 @@ class BotController:
         #print("3")
         return 0, self.player.angle  # stay
 
-
     def shot_condition(self, length):
         """
         Checks if enemy is in a straight line with a bot and if bot faces the enemy.
@@ -201,7 +200,7 @@ class BotController:
             width = self.game.assets.width
             height = self.game.assets.height
             tile_size = (width + height) / 2
-            if length - 1 < self.diagonal_distance() / tile_size:
+            if length - 1 <= self.diagonal_distance() / tile_size:
                 if b_x - self.POS_OFFSET <= e_x <= b_x + self.POS_OFFSET:
                     # enemy above
                     if b_y > e_y:
@@ -239,53 +238,31 @@ class BotController:
         else:
             return 0
 
-    def on_trajectory(self, bullet):
+    def on_trajectory(self, object):
         """
         Checks if bot is on the bullet whole trajectory, including the one behind it.
         :param bullet: Bullet Object
         :return: If bot is on the bullet trajectory. If yes also bullet angle.
         :rtype: bool, float
         """
-
-        width = self.DETECTION_OFFSET
-        bullet_x, bullet_y = bullet.position
+        width, height = self.player.get_tank_size()
+        bullet_x, bullet_y = object.position
         bot_x, bot_y = self.player.position
 
-        # line between bullet and bot (y = ax - b)
-        bb_a = (bot_y - bullet_y) / (bot_x - bullet_x)
-        bb_b = bullet_y - bb_a * bullet_x
-        # line that goes through the bot position and is perpendicular to the above one
-        bot_a = - 1 / bb_a if bb_a else -1 / pow(10, -20)
-        bot_b = bot_y - bot_a * bot_x
-        # two points on the edges of the tank that are 40 units apart
-        p1_x = (bot_b - bb_b - width) / (bb_a - bot_a)
-        p1_y = bot_a * p1_x + bot_b
+        bullet_a = tan(-object.angle * pi / 180)
+        bullet_b = bullet_y - (bullet_a * bullet_x)
 
-        p2_x = (bot_b - bb_b + width) / (bb_a - bot_a)
-        p2_y = bot_a * p2_x + bot_b
-        # line that goes through bullet pos and is under bullet.angle
-        bullet_a = tan(-bullet.angle * pi / 180)
-        bullet_b = bullet_y - bullet_a * bullet_x
+        bot_a = - 1 / bullet_a if bullet_a else float("-inf")
+        bot_b = bot_y - (bot_a * bot_x)
 
-        # print(f"bb      :   y = {bb_a}x + {bb_b}")
-        # print(f"bot     :   y = {bot_a}x + {bot_b}")
-        # print(f"bullet  :   y = {bullet_a}x + {bullet_b}")
-        # print(f"point1  :   ({p1_x}, {p1_y})")
-        # print(f"point2  :   ({p2_x}, {p2_y})")
-        # print(f"bullet_p:   ({bullet_x}, {bullet_y}) angle {bullet.angle}")
-        # print(f"tank_p  :   ({bot_x}, {bot_y})")
+        hit_x = (bot_b - bullet_b) / (bullet_a - bot_a) if bullet_a - bot_a else (bot_b - bullet_b) / (1 / float("inf"))
+        hit_y = (bullet_a * hit_x) + bullet_b
 
-        # # cross point between bb and bot lines
-        pb_x = (bot_b - bullet_b) / (bullet_a - bot_a)
-        pb_y = bot_a * pb_x + bot_b
-
-        if p1_x > p2_x:
-            p1_x, p2_x = p2_x, p1_x
-        if p1_y > p2_y:
-            p1_y, p2_y = p2_y, p1_y
-        if p1_x <= pb_x <= p2_x and p1_y <= pb_y <= p2_y:
-            return True, bullet.angle
+        dist = sqrt(pow(bot_x - hit_x, 2) + pow(bot_y - hit_y, 2))
+        if dist < self.DETECTION_OFFSET:
+            return True, object.angle
         return False, None
+        # return True, object.angle
 
     def at_gunpoint(self):
         """
@@ -297,13 +274,14 @@ class BotController:
             if bullet.player is not self.player:
                 bullet_x, bullet_y = bullet.position
                 bot_x, bot_y = self.player.position
-                if bullet_x < bot_x and 90 <= bullet.angle <= 270:
+                if bullet_x < bot_x - self.DETECTION_OFFSET and 90 <= bullet.angle <= 270:
                     continue
-                elif bullet_x > bot_x and (0 <= bullet.angle <= 90 and 270 <= bullet.angle <= 360):
+                elif bullet_x > bot_x + self.DETECTION_OFFSET and (
+                        0 <= bullet.angle <= 90 and 270 <= bullet.angle <= 360):
                     continue
-                elif bullet_y < bot_y and 0 <= bullet.angle <= 180:
+                elif bullet_y < bot_y - self.DETECTION_OFFSET and 0 <= bullet.angle <= 180:
                     continue
-                elif bullet_y > bot_y and 180 <= bullet.angle <= 360:
+                elif bullet_y > bot_y + self.DETECTION_OFFSET and 180 <= bullet.angle <= 360:
                     continue
                 else:
                     endangered, angle = self.on_trajectory(bullet)
@@ -341,23 +319,27 @@ class BotController:
                 self.shot()
             if flee:
                 rev_b_angle = (bullet_angle + 180) % 360
-                print(f"ucieka p{self.player.angle} r{rev_b_angle} b{bullet_angle}")
                 if rev_b_angle - self.FLEE_ANGLE <= self.player.angle <= rev_b_angle + self.FLEE_ANGLE:
                     self.rotate(Rotate.LEFT, 3 * time)
                 else:
                     self.drive(Drive.FORWARD, 2 * time)
+
             elif angle > 1:
                 self.rotate(Rotate.RIGHT, 2 * time)
             elif angle < -1:
                 self.rotate(Rotate.LEFT, 2 * time)
             else:
+                move_value = 0
                 self.player.rotate(self.whole_angle(self.player.angle) - self.player.angle, time)
                 if self.glitch_time < 0:
                     self.drive(Drive.BACKWARD, time)
                     move_value = 1
                 else:
-                    move_value = self.drive(Drive.FORWARD, time)
-
+                    b_x, b_y = self.player.position
+                    e_x, e_y = self.enemy.position
+                    if not(b_x == e_x and length < 3) or not(b_y == e_y and length < 3):
+                        move_value = self.drive(Drive.FORWARD, time)
+                    # move_value = self.drive(Drive.FORWARD, time)
                 self.glitch_time += move_value
                 if self.glitch_time == 100:
                     self.glitch_time = -50
