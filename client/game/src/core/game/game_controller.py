@@ -8,7 +8,6 @@ from client.game.src.core.game.game import Game
 from client.game.src.core.player.player import Player
 from client.game.src.core.player.player_controller import PlayerController
 from client.game.src.utils.config import Config
-TIMEOUT = 30           # Time in seconds
 
 
 class GameController:
@@ -70,7 +69,7 @@ class GameController:
             self.game.bullet_controller.update_bullets(frame_time / 1000)
             self.game.refresh_map()
             pygame.display.set_caption('FurryTanks - %.2f FPS' % clock.get_fps())
-            if time.perf_counter() - self.timer >= TIMEOUT:
+            if time.perf_counter() - self.timer >= Config.game['timeout']:
                 return []
             winners = self.get_winner()
             if winners is not None:

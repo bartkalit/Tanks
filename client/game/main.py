@@ -3,7 +3,7 @@ from client.game.src.core.screen import Screen
 import os
 
 statistic = {'0': 0, '1': 0}
-os.environ["SDL_VIDEODRIVER"] = "dummy"
+# os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
 def simulation():

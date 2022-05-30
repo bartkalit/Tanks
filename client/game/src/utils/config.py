@@ -2,10 +2,10 @@ class Config:
     player = {
         'speed': {                      # normal | simulation
             'drive': {
-                'forward': 560,         # 70     | 560
-                'backward': 720         # 90     | 720
+                'forward': 280,         # 70     | 560
+                'backward': 360         # 90     | 720
             },
-            'rotate': 1200              # 150    | 1200
+            'rotate': 600              # 150    | 1200
         },
         'tank': {
             'scale': 0.7,
@@ -17,11 +17,12 @@ class Config:
     }
 
     game = {
-        'fps': 200
+        'fps': 200,
+        'timeout': 40
     }
 
     bullet = {
-        'speed': 880,                   # 120    | 880
+        'speed': 440,                   # 120    | 880
         'scale': 0.09
     }
 
