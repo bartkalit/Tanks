@@ -346,7 +346,7 @@ class BotController:
                     self.shot()
 
                 move_value = 0
-                if flee and self.id:
+                if flee:
                     self.last_bullet_angle = bullet_angle
                     self.flee_timer = 20
                     rev_b_angle = (bullet_angle + 180) % 360
