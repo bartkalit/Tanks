@@ -36,13 +36,16 @@ class Player:
         self.points = 0
 
     def change_current(self):
-        self.is_current = ~self.is_current
+        self.is_current = not self.is_current
+        self._update_hearts_ui()
+        StatBar.show_avatar(self.screen, False)
+        StatBar.show_points(self.screen, self)
 
     def create_tank(self):
-        tank = pygame.image.load('assets/textures/tank' + str(self.id) + '.png')
+        tank = pygame.image.load('assets/textures/tank' + str((self.id % 3) + 1) + '.png')
         self.position = self.map.get_spawn_point
         (x, y) = self.position
-        temp_pos = (x+ self.game.assets.width/2,  y + self.game.assets.width/2)
+        temp_pos = (x + self.game.assets.width/2,  y + self.game.assets.width/2)
         self.position = temp_pos
         self.tank = TankSprite(self.position, pygame.transform.scale(tank, self.get_tank_size()))
         self.rotate(self.init_angle())
@@ -133,20 +136,19 @@ class Player:
         return new_x, new_y
 
     def die(self):
-        # TODO: Discuss if we want to leave player without sprite
         self.lives -= 1
         self._alive = False
         del self.tank
 
         if self.is_current:
             StatBar.show_avatar(self.screen, True)
+            self._update_hearts_ui()
 
-        self._update_hearts_ui()
 
     def was_hit(self):
         self.lives -= 1
-
-        self._update_hearts_ui()
+        if self.is_current:
+            self._update_hearts_ui()
 
     def _update_hearts_ui(self):
         if self.is_current:
